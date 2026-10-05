@@ -1,4 +1,4 @@
-# API-Audit – AI Notation Studio v0.5.8
+# API-Audit – AI Notation Studio v0.5.9 RC
 
 Stand: vollständiger Audit des tatsächlich hochgeladenen Codes auf Branch `develop`.
 
@@ -246,3 +246,15 @@ Selection, Cursor, Parts, Append-Funktionen, Measure-Zugriff und Undo-Transaktio
 4. Transaktionszustand bei `startCmd/endCmd` sauber verfolgen
 
 Erst danach sollte die nächste Funktionsstufe auf `develop` beginnen.
+
+
+## Korrekturen in v0.5.9 RC
+
+Die vier im Audit gefundenen C-Punkte wurden auf `develop` korrigiert:
+
+1. `userText` → `instructionBox.text.trim()`
+2. `addText("title", ...)` → `setMetaTag("workTitle", ...)`
+3. Vor dem vollständigen `time-delete` wird die Auswahl auf `Note`/`Chord` geprüft; bei vorhandener Musik wird abgebrochen
+4. `cmdStarted` verfolgt den Transaktionszustand; Rollback nur bei tatsächlich gestartetem `startCmd()`
+
+Damit gibt es im aktuellen v0.5.9-Code keinen bekannten C-Punkt aus dem v0.5.8-Audit mehr. Die B-Punkte bleiben praktische Testfälle.

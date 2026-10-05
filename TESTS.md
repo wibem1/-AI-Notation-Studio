@@ -52,3 +52,13 @@
 - [ ] Komposition landet in den ersten 16 Takten.
 - [ ] Nach dem Einfügen bleiben genau 16 Takte übrig.
 - [ ] Kommunikationsprotokoll zeigt before/requested/after.
+
+## v0.7.4 – Layout / Info / Updater
+
+- [ ] v0.7.3 erkennt v0.7.4 über **Update prüfen**.
+- [ ] **Update installieren** schreibt die neue Datei und bestätigt v0.7.4.
+- [ ] Nach MuseScore-Neustart steht oben v0.7.4.
+- [ ] Info-Dialog öffnet und schließt korrekt.
+- [ ] Komposition/Analyse und Partitur-Chat sind optisch eindeutig getrennt.
+- [ ] Chat-Modi **Nur besprechen** / **Änderung vorbereiten** funktionieren.
+- [ ] Vorschlag lässt sich bewusst als Kompositionsauftrag übernehmen.

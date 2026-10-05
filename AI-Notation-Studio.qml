@@ -7,7 +7,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.5.8"
+    version: "0.5.9"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -217,7 +217,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.5.8",
+                version: "0.5.9",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -292,7 +292,7 @@ MuseScore {
 
         return "Du komponierst eine NEUE eigenständige Stimme zu einer vorhandenen MuseScore-Passage.\n" +
                "Jetzt geht es ausschließlich um MUSIKALISCHE KOMPOSITION, noch NICHT um MIDI, JSON, Ticks oder API-Formate.\n\n" +
-               "AUFTRAG DES NUTZERS:\n" + userText + "\n\n" +
+               "AUFTRAG DES NUTZERS:\n" + instructionBox.text.trim() + "\n\n" +
                "ZIELINSTRUMENT:\n" + instrumentBox.currentText + "\n" +
                instrumentRangeText() + "\n\n" +
                "ANFORDERUNGEN:\n" +
@@ -616,6 +616,23 @@ MuseScore {
         return true
     }
 
+    function selectedRangeContainsMusic(score) {
+        if (!score || !score.selection)
+            return true
+
+        var raw = score.selection.elements
+        if (!raw)
+            return false
+
+        for (var i = 0; i < raw.length; i++) {
+            var t = elementTypeName(raw[i])
+            if (t === "Note" || t === "Chord")
+                return true
+        }
+
+        return false
+    }
+
     function prepareEmptyScoreLength(score, wantedMeasures) {
         wantedMeasures = Number(wantedMeasures)
         if (!score || isNaN(wantedMeasures) || wantedMeasures < 1)
@@ -641,6 +658,12 @@ MuseScore {
 
         if (!ok)
             return false
+
+        if (selectedRangeContainsMusic(score)) {
+            score.selection.clear()
+            statusText = "Abbruch: Die Ausgangspartitur enthält bereits Noten. Freie Komposition löscht vorhandenes musikalisches Material nicht."
+            return false
+        }
 
         cmd("time-delete")
         score.selection.clear()
@@ -693,6 +716,8 @@ MuseScore {
     }
 
     function insertFreeComposition() {
+        var cmdStarted = false
+
         if (!curScore) {
             statusText = "Bitte zuerst eine MuseScore-Partitur mit dem ersten Instrument der Besetzung öffnen."
             return
@@ -736,6 +761,7 @@ MuseScore {
 
             // Phase 2: eigene Transaktion für Taktaufbau, Parts und Noten.
             curScore.startCmd()
+            cmdStarted = true
 
             if (curScore.nmeasures < freeMeasures)
                 curScore.appendMeasures(freeMeasures - curScore.nmeasures)
@@ -744,6 +770,7 @@ MuseScore {
             // stehen ließ, brechen wir ab statt in eine falsche Struktur zu schreiben.
             if (curScore.nmeasures > freeMeasures) {
                 curScore.endCmd(true)
+                    cmdStarted = false
                 statusText = "Abbruch: MuseScore ließ nach der Leer-Takt-Bereinigung " +
                              curScore.nmeasures + " Takte stehen; erwartet: " + freeMeasures + "."
                 return
@@ -758,6 +785,7 @@ MuseScore {
                 var err = verifyPart(created, instruments[p])
                 if (err !== "") {
                     curScore.endCmd(true)
+                    cmdStarted = false
                     statusText = "Abbruch beim Erzeugen von Part " + (p + 1) + ": " + err
                     return
                 }
@@ -767,6 +795,7 @@ MuseScore {
             var finalParts = curScore.parts
             if (finalParts.length !== instruments.length) {
                 curScore.endCmd(true)
+                    cmdStarted = false
                 statusText = "Abbruch: MuseScore hat " + finalParts.length +
                              " Parts, erwartet sind " + instruments.length + "."
                 return
@@ -776,6 +805,7 @@ MuseScore {
                 var check = verifyPart(finalParts[v], instruments[v])
                 if (check !== "") {
                     curScore.endCmd(true)
+                    cmdStarted = false
                     statusText = "Abbruch: Part " + (v + 1) + " ist falsch. " + check
                     return
                 }
@@ -822,7 +852,7 @@ MuseScore {
             // Titel, Tonart und Tempo aus der musikalischen Komposition übernehmen.
             var titleText = String(data.title || "").trim()
             if (titleText !== "")
-                curScore.addText("title", titleText)
+                curScore.setMetaTag("workTitle", titleText)
 
             var keyName = String(data.keyName || "").trim()
             var keyFifths = Number(data.keyFifths)
@@ -835,6 +865,7 @@ MuseScore {
             var trimOk = (curScore.nmeasures === freeMeasures)
 
             curScore.endCmd()
+            cmdStarted = false
 
             var details = []
             for (var d = 0; d < finalParts.length; d++) {
@@ -851,7 +882,10 @@ MuseScore {
                          (trimOk ? " · Partitur: " + curScore.nmeasures + " Takte" :
                                    " · WARNUNG: Taktkürzung nicht vollständig") + "."
         } catch (e) {
-            try { curScore.endCmd(true) } catch (ignore) {}
+            if (cmdStarted) {
+                try { curScore.endCmd(true) } catch (ignore) {}
+                cmdStarted = false
+            }
             statusText = "Fehler beim Einfügen: " + e
         }
     }
@@ -909,6 +943,8 @@ MuseScore {
     }
 
     function insertCompositionAsNewPart() {
+        var cmdStarted = false
+
         if (!curScore) {
             statusText = "Keine Partitur geöffnet."
             return
@@ -927,6 +963,7 @@ MuseScore {
 
             var oldStaves = curScore.nstaves
             curScore.startCmd()
+            cmdStarted = true
 
             curScore.appendPartByMusicXmlId(instrumentMusicXmlId())
 
@@ -958,12 +995,16 @@ MuseScore {
             }
 
             curScore.endCmd()
+            cmdStarted = false
 
             statusText = inserted > 0
                 ? "Neue Spur eingefügt: " + inserted + " Noten."
                 : "Keine gültigen Noten eingefügt."
         } catch (e) {
-            try { curScore.endCmd(true) } catch (ignore) {}
+            if (cmdStarted) {
+                try { curScore.endCmd(true) } catch (ignore) {}
+                cmdStarted = false
+            }
             statusText = "Fehler beim Einfügen der neuen Spur: " + e
         }
     }
@@ -1195,7 +1236,7 @@ MuseScore {
             spacing: 10
 
             Label {
-                text: "AI Notation Studio · v0.5.8"
+                text: "AI Notation Studio · v0.5.9"
                 color: "white"
                 font.pixelSize: 28
                 font.bold: true
@@ -1403,7 +1444,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.5.8 korrigiert den entscheidenden MuseScore-API-Fehler: selectRange erwartet endStaff exklusiv. Deshalb wird jetzt 0..nstaves statt 0..nstaves-1 gewählt. Erst damit kann time-delete den Taktbereich wirklich löschen."
+                text: "v0.5.9 stabilisiert v0.5.8: undefinierte Auftragsvariable behoben, vorhandene Noten vor Löschung geschützt, Titel nur noch als workTitle-Metadatum gesetzt und startCmd/endCmd-Rollback abgesichert."
             }
         }
     }

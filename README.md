@@ -1,53 +1,44 @@
-# AI Notation Studio v0.5.8
+# AI Notation Studio v0.7.0
 
-Aktueller, tatsächlich hochgeladener Ausgangsstand für die weitere Entwicklung.
-
-## Status
-
-**v0.5.8 ist der Git-Baseline-Stand.**
-
-Maßgeblicher Quellcode:
-
-- `AI-Notation-Studio.qml`
-
-Die ZIP-Datei bleibt nur als Archiv erhalten. Für die weitere Entwicklung ist der entpackte QML-Quellcode maßgeblich.
+AI Notation Studio ist ein MuseScore-Studio-Plugin für KI-gestützte Analyse, Komposition und Bearbeitung direkt an der Partitur.
 
 ## Aktuelle Funktionen
 
-- Auswahl in MuseScore lesen
-- Auswahl musikalisch analysieren
-- neue Stimme zu einer vorhandenen Auswahl komponieren
+- Auswahl analysieren
+- neue Stimme zu einer Auswahl komponieren
 - freie Komposition ohne Vorlage
-- Zwei-Stufen-Verfahren: musikalische Komposition → technische Umsetzung
-- OpenAI, Anthropic und Google
-- lokale Speicherung von Provider, Modell und API-Key
-- Einfügen erzeugter Musik in MuseScore
+- vorhandene Komposition fortsetzen
+- aus einem Motiv entwickeln
+- genau eine Variante erzeugen
+- für eine andere Besetzung bearbeiten
+- partiturbezogener Chat mit **Besprechen** und **Ändern**
+- MuseScore-eigenes Rückgängig/Wiederholen
+- Kommunikationsprotokoll
+- Diagnose
+- Tokenkontrolle
+- integrierte GitHub-Updatefunktion
 
-## Wichtige Korrektur in v0.5.8
+## Musikalische Architektur
 
-MuseScore verwendet bei
+Kompositionsfunktionen arbeiten zweistufig:
 
-```qml
-selection.selectRange(startTick, endTick, startStaff, endStaff)
-```
+1. **Musikalische Fassung** — vollständig komponiert, ohne JSON-/Tick-Zwang.
+2. **Technische Umsetzung** — Übertragung der fertigen Musik in MuseScore-Daten.
 
-ein exklusives `endStaff`.
+Es gibt keine Vorentwurfsphase.
 
-Daher ist für die gesamte Partitur korrekt:
+## Update
 
-```qml
-curScore.selection.selectRange(startTick, endTick, 0, curScore.nstaves)
-```
+Im Plugin genügt künftig:
 
-und nicht `curScore.nstaves - 1`.
+1. **Update prüfen**
+2. **Update installieren**
+3. MuseScore neu starten
 
-## Entwicklungsorganisation ab jetzt
+Es gibt nur einen Updateweg über den aktuellen Stand auf GitHub/`main`.
 
-- `main`: letzter tatsächlich verwendeter bzw. freigegebener Stand
-- `develop`: laufende Entwicklung
-- jede Änderung wird im `CHANGELOG.md` dokumentiert
-- bekannte Probleme stehen in `KNOWN-ISSUES.md`
-- MuseScore-API-Nutzung wird in `API-AUDIT.md` geprüft
-- vor einer neuen stabilen Version gilt der Testplan in `TESTS.md`
+## Entwicklung
 
-Die zuvor versehentlich verwendete Bezeichnung 0.8.0 gehört nicht zur realen Versionsgeschichte und wird nicht weitergeführt.
+Ab v0.7.0 gibt es nur noch eine aktive Entwicklungslinie: `main`.
+
+Rollback erfolgt über versionierte Git-Commits, nicht über parallele Nutzerzweige.

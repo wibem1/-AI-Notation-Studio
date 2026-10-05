@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.4"
+    version: "0.7.5"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -90,7 +90,8 @@ MuseScore {
     }
 
     function updateRawUrl() {
-        return "https://raw.githubusercontent.com/wibem1/AI-Notation-Studio/main/AI-Notation-Studio.qml"
+        return "https://raw.githubusercontent.com/wibem1/AI-Notation-Studio/main/AI-Notation-Studio.qml?ts=" +
+               new Date().getTime()
     }
 
     function extractPluginVersion(text) {
@@ -115,6 +116,10 @@ MuseScore {
 
         var xhr = new XMLHttpRequest()
         xhr.open("GET", updateRawUrl())
+        try {
+            xhr.setRequestHeader("Cache-Control", "no-cache")
+            xhr.setRequestHeader("Pragma", "no-cache")
+        } catch (ignoreHeaders) {}
         xhr.onreadystatechange = function() {
             if (xhr.readyState !== XMLHttpRequest.DONE) return
             updateBusy = false
@@ -132,13 +137,14 @@ MuseScore {
 
             var remote = extractPluginVersion(source)
             updateRemoteVersion = remote
+            updateStatus = "Gefunden: lokal v" + currentVersionString() + " · GitHub v" + remote
 
             var cmp = compareVersions(currentVersionString(), remote)
             if (cmp < 0) {
                 updateSourceText = source
-                updateStatus = "Neue Version verfügbar: v" + remote
+                updateStatus = "Neue Version verfügbar: lokal v" + currentVersionString() + " → GitHub v" + remote
             } else if (cmp === 0) {
-                updateStatus = "Aktuell: v" + currentVersionString()
+                updateStatus = "Aktuell: lokal v" + currentVersionString() + " · GitHub v" + remote
             } else {
                 updateStatus = "Installiert v" + currentVersionString() + " ist neuer als GitHub v" + remote + "."
             }
@@ -409,7 +415,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.4",
+                version: "0.7.5",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -1827,7 +1833,7 @@ MuseScore {
                 selectByMouse: true
                 font.pixelSize: 15
                 text:
-                    "AI Notation Studio v0.7.4\n\n" +
+                    "AI Notation Studio v0.7.5\n\n" +
                     "KOMPOSITION / ANALYSE\n" +
                     "Dieser Bereich führt den eigentlichen musikalischen Auftrag aus. Der gewählte Modus bestimmt, ob analysiert, eine neue Stimme komponiert, frei komponiert, fortgesetzt, ein Motiv entwickelt, eine Variante erzeugt oder neu instrumentiert wird.\n\n" +
                     "PARTITUR-CHAT\n" +
@@ -1857,7 +1863,7 @@ MuseScore {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "AI Notation Studio · v0.7.4"
+                    text: "AI Notation Studio · v0.7.5"
                     color: "white"
                     font.pixelSize: 28
                     font.bold: true
@@ -2264,7 +2270,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.4: klar getrennte Bereiche für Komposition/Analyse und Partitur-Chat, Info-Dialog und überarbeitetes Layout. Gleichzeitig dient diese Version als kontrollierter Test für den eingebauten Updater."
+                text: "v0.7.5: Updateprüfung mit Cache-Buster und No-Cache-Headern; lokale und auf GitHub gefundene Versionsnummer werden sichtbar angezeigt. Enthält Layout und Info aus v0.7.4."
             }
         }
     }

@@ -505,6 +505,14 @@ MuseScore {
         if (low.indexOf("cello") >= 0 || low.indexOf("violoncello") >= 0) return "violoncello"
         if (low.indexOf("kontrabass") >= 0 || low.indexOf("double bass") >= 0) return "contrabass"
         if (low.indexOf("klavier") >= 0 || low.indexOf("piano") >= 0) return "piano"
+        if (low.indexOf("flöte") >= 0 || low.indexOf("floete") >= 0 || low.indexOf("flute") >= 0) return "flute"
+        if (low.indexOf("oboe") >= 0) return "oboe"
+        if (low.indexOf("klarinette") >= 0 || low.indexOf("clarinet") >= 0) return "bb-clarinet"
+        if (low.indexOf("fagott") >= 0 || low.indexOf("bassoon") >= 0) return "bassoon"
+        if (low.indexOf("horn") >= 0) return "horn"
+        if (low.indexOf("trompete") >= 0 || low.indexOf("trumpet") >= 0) return "bb-trumpet"
+        if (low.indexOf("posaune") >= 0 || low.indexOf("trombone") >= 0) return "trombone"
+        if (low.indexOf("tuba") >= 0) return "tuba"
         return "violin"
     }
 
@@ -1944,7 +1952,7 @@ MuseScore {
                     Layout.fillWidth: true
                     text: freeInstrumentation
                     font.pixelSize: uiSize
-                    placeholderText: "z. B. Violine, Cello"
+                    placeholderText: "z. B. Violine, Cello, Flöte, Oboe, Klarinette, Fagott, Horn, Trompete, Posaune, Tuba"
                     onTextChanged: freeInstrumentation = text
                 }
 

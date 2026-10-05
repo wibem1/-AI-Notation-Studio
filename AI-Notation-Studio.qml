@@ -8,11 +8,11 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.3"
+    version: "0.7.4"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
-    width: 820
+    width: 900
     height: 900
 
     property string selectionJson: ""
@@ -42,6 +42,7 @@ MuseScore {
     property int chatModeIndex: 0
     property string chatProposedInstruction: ""
     property int chatContextTurns: 12
+    property bool infoOpen: false
 
     Settings {
         id: settings
@@ -408,7 +409,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.3",
+                version: "0.7.4",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -1809,6 +1810,40 @@ MuseScore {
         statusText = "Markiere eine Passage und klicke auf „Auswahl neu lesen“ oder „An KI senden“."
     }
 
+    Dialog {
+        id: infoDialog
+        title: "AI Notation Studio – Info"
+        modal: true
+        standardButtons: Dialog.Ok
+        width: 620
+
+        contentItem: ScrollView {
+            implicitWidth: 590
+            implicitHeight: 520
+
+            TextArea {
+                readOnly: true
+                wrapMode: TextEdit.Wrap
+                selectByMouse: true
+                font.pixelSize: 15
+                text:
+                    "AI Notation Studio v0.7.4\n\n" +
+                    "KOMPOSITION / ANALYSE\n" +
+                    "Dieser Bereich führt den eigentlichen musikalischen Auftrag aus. Der gewählte Modus bestimmt, ob analysiert, eine neue Stimme komponiert, frei komponiert, fortgesetzt, ein Motiv entwickelt, eine Variante erzeugt oder neu instrumentiert wird.\n\n" +
+                    "PARTITUR-CHAT\n" +
+                    "Der Chat ist davon getrennt. „Nur besprechen“ verändert nichts. „Änderung vorbereiten“ formuliert lediglich einen Vorschlag für einen Bearbeitungsauftrag. Erst mit „Vorschlag als Kompositionsauftrag übernehmen“ wird dieser Text in das Auftragsfeld übernommen.\n\n" +
+                    "ZWEI-STUFEN-PRINZIP\n" +
+                    "Bei Kompositionsaufgaben entsteht zuerst die fertige musikalische Fassung. Erst danach folgt die technische Umsetzung für MuseScore. Es gibt keine Vorentwurfsphase.\n\n" +
+                    "RÜCKGÄNGIG / WIEDERHOLEN\n" +
+                    "Verwendet MuseScores eigene Undo-Historie.\n\n" +
+                    "PROTOKOLL / DIAGNOSE\n" +
+                    "Zeigt die Kommunikation, technische Daten und Tokenwerte. API-Keys werden nicht in die Diagnose übernommen.\n\n" +
+                    "UPDATE\n" +
+                    "„Update prüfen“ sucht die aktuelle Version auf GitHub. „Update installieren“ ersetzt die Plugin-Datei; danach MuseScore neu starten."
+            }
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "#202124"
@@ -1818,11 +1853,22 @@ MuseScore {
             anchors.margins: 18
             spacing: 10
 
-            Label {
-                text: "AI Notation Studio · v0.7.3"
-                color: "white"
-                font.pixelSize: 28
-                font.bold: true
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label {
+                    text: "AI Notation Studio · v0.7.4"
+                    color: "white"
+                    font.pixelSize: 28
+                    font.bold: true
+                    Layout.fillWidth: true
+                }
+
+                Button {
+                    text: "Info"
+                    font.pixelSize: 14
+                    onClicked: infoDialog.open()
+                }
             }
 
             RowLayout {
@@ -1868,6 +1914,34 @@ MuseScore {
                     color: "#aaaaaa"
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignRight
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 58
+                color: "#2b2d31"
+                radius: 5
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 2
+
+                    Label {
+                        text: "KOMPOSITION / ANALYSE"
+                        color: "white"
+                        font.pixelSize: 18
+                        font.bold: true
+                    }
+
+                    Label {
+                        text: "Hier steht der eigentliche musikalische Auftrag. Auswahl, Modus, Besetzung und Auftrag gelten nur für diesen Arbeitsbereich."
+                        color: "#c9c9c9"
+                        font.pixelSize: 13
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                    }
                 }
             }
 
@@ -1990,7 +2064,7 @@ MuseScore {
             }
 
             Label {
-                text: "Auftrag an die KI"
+                text: "Kompositions-/Analyseauftrag"
                 color: "white"
                 font.pixelSize: uiSize
                 font.bold: true
@@ -2002,7 +2076,7 @@ MuseScore {
                 Layout.preferredHeight: 105
                 wrapMode: TextEdit.Wrap
                 font.pixelSize: uiSize
-                placeholderText: "z. B. Analysiere diese Passage musikalisch."
+                placeholderText: "Hier den eigentlichen musikalischen Auftrag eingeben …"
             }
 
             RowLayout {
@@ -2017,7 +2091,7 @@ MuseScore {
                 }
 
                 Button {
-                    text: busy ? "KI arbeitet …" : "An KI senden"
+                    text: busy ? "KI arbeitet …" : "Auftrag ausführen"
                     enabled: !busy
                     font.pixelSize: uiSize
                     onClicked: sendToAI()
@@ -2033,7 +2107,7 @@ MuseScore {
             }
 
             Label {
-                text: "KI-Antwort"
+                text: "Ergebnis des Kompositions-/Analyseauftrags"
                 color: "white"
                 font.pixelSize: uiSize
                 font.bold: true
@@ -2071,10 +2145,43 @@ MuseScore {
                 }
             }
 
-            Button {
-                text: chatExpanded ? "Chat ausblenden" : "Partitur-Chat"
-                font.pixelSize: 14
-                onClicked: chatExpanded = !chatExpanded
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 66
+                color: "#34363b"
+                radius: 5
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 10
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Label {
+                            text: "PARTITUR-CHAT"
+                            color: "white"
+                            font.pixelSize: 18
+                            font.bold: true
+                        }
+
+                        Label {
+                            text: "Zum Besprechen der Partitur. Der Chat ist getrennt vom Kompositionsauftrag und schreibt nicht automatisch in die Partitur."
+                            color: "#c9c9c9"
+                            font.pixelSize: 13
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    Button {
+                        text: chatExpanded ? "Chat schließen" : "Chat öffnen"
+                        font.pixelSize: 14
+                        onClicked: chatExpanded = !chatExpanded
+                    }
+                }
             }
 
             Rectangle {
@@ -2089,12 +2196,22 @@ MuseScore {
                     anchors.margins: 8
                     spacing: 6
 
+                    Label {
+                        Layout.fillWidth: true
+                        text: chatModeIndex === 0
+                              ? "Nur besprechen: Fragen, analysieren und diskutieren – ohne Änderung."
+                              : "Änderung vorbereiten: Der Chat formuliert einen Bearbeitungsauftrag, den du bewusst in das Kompositionsfeld übernehmen kannst."
+                        color: "#d7d7d7"
+                        font.pixelSize: 13
+                        wrapMode: Text.WordWrap
+                    }
+
                     RowLayout {
                         Layout.fillWidth: true
 
                         ComboBox {
                             id: chatModeBox
-                            model: ["Besprechen", "Ändern"]
+                            model: ["Nur besprechen", "Änderung vorbereiten"]
                             currentIndex: chatModeIndex
                             onCurrentIndexChanged: chatModeIndex = currentIndex
                             font.pixelSize: 14
@@ -2103,7 +2220,7 @@ MuseScore {
                         Button { text: "Neuer Chat"; font.pixelSize: 14; onClicked: clearChatHistory() }
 
                         Button {
-                            text: "Bearbeitungsauftrag übernehmen"
+                            text: "Vorschlag als Kompositionsauftrag übernehmen"
                             visible: chatProposedInstruction !== ""
                             font.pixelSize: 14
                             onClicked: adoptChatInstruction()
@@ -2132,7 +2249,7 @@ MuseScore {
                         TextField {
                             id: chatInput
                             Layout.fillWidth: true
-                            placeholderText: "Frage zur Partitur oder zur markierten Passage …"
+                            placeholderText: "Hier mit der KI über die Partitur sprechen …"
                             font.pixelSize: 14
                             onAccepted: sendChatMessage()
                         }
@@ -2147,7 +2264,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.3: Updater kompatibel mit älteren FileIO-APIs. Er verwendet pluginDirectoryPath nur wenn vorhanden und fällt sonst auf pluginsUserPath bzw. userDataPath/Plugins zurück. Enthält außerdem die v0.7.2-Korrektur für leere Endtakte."
+                text: "v0.7.4: klar getrennte Bereiche für Komposition/Analyse und Partitur-Chat, Info-Dialog und überarbeitetes Layout. Gleichzeitig dient diese Version als kontrollierter Test für den eingebauten Updater."
             }
         }
     }

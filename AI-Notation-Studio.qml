@@ -754,8 +754,10 @@ MuseScore {
             // Phase 1: MuseScore-Befehl außerhalb unserer startCmd-Transaktion.
             var prepOk = prepareEmptyScoreLength(curScore, freeMeasures)
             if (!prepOk) {
-                statusText = "Abbruch: Ausgangspartitur konnte nicht auf den leeren Grundzustand gebracht werden. Aktuell: " +
-                             curScore.nmeasures + " Takte."
+                if (statusText.indexOf("Ausgangspartitur enthält bereits Noten") < 0) {
+                    statusText = "Abbruch: Ausgangspartitur konnte nicht auf den leeren Grundzustand gebracht werden. Aktuell: " +
+                                 curScore.nmeasures + " Takte."
+                }
                 return
             }
 
@@ -770,7 +772,7 @@ MuseScore {
             // stehen ließ, brechen wir ab statt in eine falsche Struktur zu schreiben.
             if (curScore.nmeasures > freeMeasures) {
                 curScore.endCmd(true)
-                    cmdStarted = false
+                cmdStarted = false
                 statusText = "Abbruch: MuseScore ließ nach der Leer-Takt-Bereinigung " +
                              curScore.nmeasures + " Takte stehen; erwartet: " + freeMeasures + "."
                 return

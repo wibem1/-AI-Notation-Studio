@@ -33,3 +33,9 @@ Keine Vorentwurfsphase.
 v0.7.10 ist die Brücke vom monolithischen Plugin zur getrennten Loader/App-Struktur. Der klassische Einstieg `AI-Notation-Studio.qml` bleibt der MuseScore-Plugin-Host. Er enthält einen Loader, der künftig versionierte App-Dateien mit jeweils neuer URL lädt. Dadurch soll der bekannte QML-Komponenten-Cache umgangen werden, ohne MuseScore nach jedem Update neu zu starten.
 
 Der Update-Feed prüft zuerst `AI-Notation-Studio-App.qml`. Ist diese Datei noch nicht veröffentlicht oder ungültig, wird auf `AI-Notation-Studio.qml` zurückgefallen. Eine Live-App wird lokal unter `AI-Notation-Studio-App-<Version>.qml` gespeichert, nachgelesen, anhand der Versionsnummer geprüft und erst danach aktiviert.
+
+## v0.8.0 – erste Live-App
+
+Die Datei `AI-Notation-Studio-App.qml` ist ab v0.8.0 der Update-Feed für die eigentliche Anwendung. Der Host lädt nach erfolgreichem Download lokal eine Datei mit versionsspezifischem Namen, z. B. `AI-Notation-Studio-App-0.8.0.qml`. Die unterschiedliche URL ist bewusst Teil des Designs, damit die neue QML-Komponente nicht unter derselben gecachten URL wie die vorherige Version läuft.
+
+Die App bleibt selbst ein `MuseScore`-API-Objekt, wird aber vom Host als QQuickItem über `Loader` eingebettet. Weil ein geladenes Unterobjekt nicht über MuseScores normalen Plugin-Startpfad gestartet wird, stellt es `bootstrapRun()` bereit; der Host ruft diese Funktion in `Loader.onLoaded` auf.

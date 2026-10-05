@@ -88,3 +88,11 @@
 - [ ] Provider, Modell und API-Key sind im eingeklappten Zustand verborgen.
 - [ ] Der letzte Auf-/Zuklapp-Zustand bleibt nach Plugin-Neustart erhalten.
 - [ ] Update von v0.7.8 auf v0.7.9 funktioniert ohne Terminal-Schritt.
+
+## v0.7.10 – Loader-Brücke
+
+- [ ] Update von v0.7.9 auf v0.7.10 wird gefunden und installiert.
+- [ ] Nach dem einmaligen MuseScore-Neustart startet v0.7.10 normal.
+- [ ] Ohne veröffentlichte `AI-Notation-Studio-App.qml` fällt die Updateprüfung sauber auf die monolithische Datei zurück.
+- [ ] Späterer Live-Test: eine veröffentlichte App-Version wird als versionierte lokale QML-Datei geschrieben und nach Versionsprüfung ohne MuseScore-Neustart geladen.
+- [ ] Nach erneutem Start wird die zuletzt aktivierte Live-App aus den gespeicherten Einstellungen geladen.

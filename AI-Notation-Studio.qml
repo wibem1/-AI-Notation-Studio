@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.6"
+    version: "0.7.7"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -168,20 +168,43 @@ MuseScore {
         }
     }
 
+    function resolvedCurrentPluginSource() {
+        try {
+            var u = String(Qt.resolvedUrl("AI-Notation-Studio.qml"))
+            return u || ""
+        } catch (e) {
+            return ""
+        }
+    }
+
+    function fileUrlToLocalPath(urlText) {
+        var s = String(urlText || "")
+        if (s.indexOf("file://") !== 0)
+            return s
+        s = s.replace(/^file:\/\//, "")
+        try { s = decodeURIComponent(s) } catch (ignoreDecode) {}
+        return s
+    }
+
     function resolvePluginTargetPath() {
+        // Primär: QML-eigene Auflösung relativ zur aktuell laufenden Plugin-Datei.
+        // Das funktioniert auch in MuseScore 4.4–4.6, wo die neueren FileIO-
+        // Pfadmethoden noch nicht existieren.
+        var currentSource = resolvedCurrentPluginSource()
+        if (currentSource !== "")
+            return currentSource
+
         var dir = ""
 
-        // Newer MuseScore/FileIO versions.
+        // Neuere MuseScore/FileIO-Versionen.
         if (typeof updaterFile.pluginDirectoryPath === "function") {
             try { dir = updaterFile.pluginDirectoryPath() } catch (e1) { dir = "" }
         }
 
-        // Ältere MuseScore-Versionen: konfigurierter Plugin-Ordner.
         if ((!dir || dir === "") && typeof updaterFile.pluginsUserPath === "function") {
             try { dir = updaterFile.pluginsUserPath() } catch (e2) { dir = "" }
         }
 
-        // Breiter kompatibler Fallback: MuseScore-Dokumentordner/Plugins.
         if ((!dir || dir === "") && typeof updaterFile.userDataPath === "function") {
             try {
                 var dataDir = updaterFile.userDataPath()
@@ -207,14 +230,15 @@ MuseScore {
         try {
             var target = resolvePluginTargetPath()
             if (!target || target === "") {
-                updateStatus = "Update fehlgeschlagen: MuseScore liefert keinen beschreibbaren Plugin-Pfad."
+                updateStatus = "Update fehlgeschlagen: laufende Plugin-Datei konnte nicht aufgelöst werden."
                 return
             }
 
             updaterTargetPath = target
 
             if (typeof updaterFile.isPathWriteable === "function") {
-                var writable = updaterFile.isPathWriteable(target)
+                var writablePath = fileUrlToLocalPath(target)
+                var writable = updaterFile.isPathWriteable(writablePath)
                 if (!writable) {
                     updateStatus = "Update fehlgeschlagen: MuseScore darf diese Datei nicht schreiben. Pfad: " + target
                     return
@@ -238,7 +262,7 @@ MuseScore {
             }
 
             updateStatus = "v" + updateRemoteVersion +
-                           " installiert und geprüft. MuseScore jetzt neu starten."
+                           " installiert und geprüft. MuseScore jetzt neu starten. Quelle: " + target
             updateSourceText = ""
         } catch (e) {
             updateStatus = "Update-Fehler: " + e
@@ -553,7 +577,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.6",
+                version: "0.7.7",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -2096,7 +2120,7 @@ MuseScore {
                 selectByMouse: true
                 font.pixelSize: 15
                 text:
-                    "AI Notation Studio v0.7.6\n\n" +
+                    "AI Notation Studio v0.7.7\n\n" +
                     "KOMPOSITION / ANALYSE\n" +
                     "Dieser Bereich führt den eigentlichen musikalischen Auftrag aus. Der gewählte Modus bestimmt, ob analysiert, eine neue Stimme komponiert, frei komponiert, fortgesetzt, ein Motiv entwickelt, eine Variante erzeugt oder neu instrumentiert wird.\n\n" +
                     "PARTITUR-CHAT\n" +
@@ -2128,7 +2152,7 @@ MuseScore {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "AI Notation Studio · v0.7.6"
+                    text: "AI Notation Studio · v0.7.7"
                     color: "white"
                     font.pixelSize: 28
                     font.bold: true
@@ -2562,7 +2586,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.6: getrenntes generelles und Score-bezogenes Gedächtnis. Allgemeine Vorbelegungen gelten für alle Scores; Chat, letzter Auftrag und Arbeitsstände werden als MuseScore-Metadatum nur im jeweiligen Score gespeichert."
+                text: "v0.7.7: Updater adressiert die aktuell laufende QML-Datei jetzt über Qt.resolvedUrl() relativ zum Plugin selbst. Dadurch ist kein neuer FileIO-Pfadaufruf erforderlich; ältere MuseScore-4.x-Versionen werden unterstützt."
             }
         }
     }

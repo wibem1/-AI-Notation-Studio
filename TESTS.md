@@ -45,3 +45,10 @@
 - [ ] Diagnose enthält keine API-Keys
 - [ ] Tokenwerte werden für verwendete Provider erfasst
 - [ ] unbekannte Kosten werden als nicht berechenbar bezeichnet
+
+## v0.7.2 – leere Endtakte
+
+- [ ] Ausgangspartitur mit 32 leeren Takten, Auftrag 16 Takte.
+- [ ] Komposition landet in den ersten 16 Takten.
+- [ ] Nach dem Einfügen bleiben genau 16 Takte übrig.
+- [ ] Kommunikationsprotokoll zeigt before/requested/after.

@@ -1,53 +1,30 @@
-# AI Notation Studio v0.5.8
+# AI Notation Studio v0.5.9 RC
 
-Aktueller, tatsächlich hochgeladener Ausgangsstand für die weitere Entwicklung.
+Aktueller Entwicklungsstand auf `develop`.
 
 ## Status
 
-**v0.5.8 ist der Git-Baseline-Stand.**
+**v0.5.8 bleibt der stabile Git-Baseline-Stand auf `main`.**
 
-Maßgeblicher Quellcode:
+**v0.5.9 ist ein Release Candidate auf `develop`** und enthält ausschließlich Stabilitätskorrekturen aus dem vollständigen MuseScore-4.7-API-Audit.
 
-- `AI-Notation-Studio.qml`
+## Korrekturen in v0.5.9
 
-Die ZIP-Datei bleibt nur als Archiv erhalten. Für die weitere Entwicklung ist der entpackte QML-Quellcode maßgeblich.
+- undefiniertes `userText` durch `instructionBox.text.trim()` ersetzt
+- vorhandene Noten werden vor dem vollständigen Taktlöschen erkannt; freie Komposition bricht dann ab
+- Titel wird nicht mehr per `addText("title", ...)` als zweiter Titel eingefügt, sondern als `workTitle`-Metadatum gesetzt
+- `startCmd()/endCmd()` wird jetzt mit `cmdStarted` abgesichert; Rollback nur bei tatsächlich gestarteter Transaktion
 
-## Aktuelle Funktionen
+## Unverändert
 
-- Auswahl in MuseScore lesen
-- Auswahl musikalisch analysieren
-- neue Stimme zu einer vorhandenen Auswahl komponieren
-- freie Komposition ohne Vorlage
+- klassische MuseScore-QML-Plugin-Architektur
 - Zwei-Stufen-Verfahren: musikalische Komposition → technische Umsetzung
-- OpenAI, Anthropic und Google
-- lokale Speicherung von Provider, Modell und API-Key
-- Einfügen erzeugter Musik in MuseScore
+- OpenAI, Anthropic, Google
+- Auswahl lesen, analysieren, neue Stimme, freie Komposition
+- Instrument- und Taktlogik aus v0.5.8
 
-## Wichtige Korrektur in v0.5.8
+## Entwicklungsorganisation
 
-MuseScore verwendet bei
-
-```qml
-selection.selectRange(startTick, endTick, startStaff, endStaff)
-```
-
-ein exklusives `endStaff`.
-
-Daher ist für die gesamte Partitur korrekt:
-
-```qml
-curScore.selection.selectRange(startTick, endTick, 0, curScore.nstaves)
-```
-
-und nicht `curScore.nstaves - 1`.
-
-## Entwicklungsorganisation ab jetzt
-
-- `main`: letzter tatsächlich verwendeter bzw. freigegebener Stand
-- `develop`: laufende Entwicklung
-- jede Änderung wird im `CHANGELOG.md` dokumentiert
-- bekannte Probleme stehen in `KNOWN-ISSUES.md`
-- MuseScore-API-Nutzung wird in `API-AUDIT.md` geprüft
-- vor einer neuen stabilen Version gilt der Testplan in `TESTS.md`
-
-Die zuvor versehentlich verwendete Bezeichnung 0.8.0 gehört nicht zur realen Versionsgeschichte und wird nicht weitergeführt.
+- `main`: v0.5.8
+- `develop`: v0.5.9 RC
+- erst nach bestandenem Testplan wird v0.5.9 nach `main` übernommen

@@ -60,3 +60,7 @@ AI Notation Studio trennt jetzt zwei Ebenen:
 - **Score-Gedächtnis**: nur Informationen zum geöffneten Score, darunter Chat, letzter Auftrag und musikalische Arbeitsstände.
 
 Das Score-Gedächtnis wird als MuseScore-Metadatum im jeweiligen Score gespeichert. Dadurch bleiben verschiedene Scores voneinander getrennt.
+
+## Oberfläche v0.7.8
+
+Technische Einstellungen sind jetzt vom musikalischen Arbeitsbereich getrennt. **Provider, Modell und API-Key** befinden sich gesammelt im unteren Bereich **Technisches**. Dadurch bleibt **Komposition / Analyse** auf die musikalische Arbeit konzentriert.

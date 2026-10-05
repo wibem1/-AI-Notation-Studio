@@ -2,12 +2,13 @@ import QtQuick 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.1
 import MuseScore 3.0
+import FileIO 3.0
 
 MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.5.9"
+    version: "0.6.0"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -23,6 +24,10 @@ MuseScore {
     property string freeInstrumentation: "Violine, Cello"
     property int freeMeasures: 16
     property int uiSize: 18
+    property string updateStatus: "Noch nicht geprüft."
+    property string updateRemoteVersion: ""
+    property string updateSourceText: ""
+    property bool updateBusy: false
 
     Settings {
         id: settings
@@ -35,6 +40,141 @@ MuseScore {
         property string keyAnthropic: ""
         property string keyGoogle: ""
         property int freeCompositionCounter: 0
+        property string updateChannel: "develop"
+    }
+
+    FileIO {
+        id: updaterFile
+        onError: function(msg) {
+            updateStatus = "Update-Datei konnte nicht geschrieben werden: " + msg
+        }
+    }
+
+    function currentVersionString() {
+        return root.version
+    }
+
+    function versionParts(v) {
+        var raw = String(v || "").replace(/^v/i, "").split(".")
+        var out = []
+        for (var i = 0; i < 3; i++) {
+            var n = i < raw.length ? parseInt(raw[i], 10) : 0
+            out.push(isNaN(n) ? 0 : n)
+        }
+        return out
+    }
+
+    function compareVersions(a, b) {
+        var av = versionParts(a)
+        var bv = versionParts(b)
+        for (var i = 0; i < 3; i++) {
+            if (av[i] < bv[i]) return -1
+            if (av[i] > bv[i]) return 1
+        }
+        return 0
+    }
+
+    function updateBranch() {
+        return settings.updateChannel === "main" ? "main" : "develop"
+    }
+
+    function updateChannelLabel() {
+        return updateBranch() === "main" ? "Stable" : "Testversion"
+    }
+
+    function updateRawUrl() {
+        return "https://raw.githubusercontent.com/wibem1/AI-Notation-Studio/" +
+               updateBranch() + "/AI-Notation-Studio.qml"
+    }
+
+    function extractPluginVersion(text) {
+        var m = String(text || "").match(/version\s*:\s*"([0-9]+\.[0-9]+\.[0-9]+)"/)
+        return m && m.length > 1 ? m[1] : ""
+    }
+
+    function validateUpdateSource(text) {
+        if (!text || text.length < 1000) return false
+        if (text.indexOf("import MuseScore 3.0") < 0) return false
+        if (text.indexOf("MuseScore {") < 0) return false
+        if (text.indexOf("AI Notation Studio") < 0) return false
+        return extractPluginVersion(text) !== ""
+    }
+
+    function checkForUpdate() {
+        if (updateBusy) return
+        updateBusy = true
+        updateRemoteVersion = ""
+        updateSourceText = ""
+        updateStatus = "Prüfe " + updateChannelLabel() + " …"
+
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", updateRawUrl())
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return
+            updateBusy = false
+
+            if (xhr.status < 200 || xhr.status >= 300) {
+                updateStatus = "Update-Prüfung fehlgeschlagen: HTTP " + xhr.status
+                return
+            }
+
+            var source = xhr.responseText
+            if (!validateUpdateSource(source)) {
+                updateStatus = "Update abgebrochen: GitHub-Datei ist keine gültige AI-Notation-Studio-Version."
+                return
+            }
+
+            var remote = extractPluginVersion(source)
+            updateRemoteVersion = remote
+
+            var cmp = compareVersions(currentVersionString(), remote)
+            if (cmp < 0) {
+                updateSourceText = source
+                updateStatus = "Neue Version verfügbar: v" + remote
+            } else if (cmp === 0) {
+                updateStatus = "Aktuell: v" + currentVersionString()
+            } else {
+                updateStatus = "Installiert v" + currentVersionString() +
+                               " ist neuer als " + updateChannelLabel() + " v" + remote + "."
+            }
+        }
+
+        try {
+            xhr.send()
+        } catch (e) {
+            updateBusy = false
+            updateStatus = "Update-Prüfung fehlgeschlagen: " + e
+        }
+    }
+
+    function installUpdate() {
+        if (updateSourceText === "" || updateRemoteVersion === "") {
+            updateStatus = "Kein neues Update zum Installieren."
+            return
+        }
+
+        var dir = updaterFile.pluginDirectoryPath()
+        if (!dir || dir === "") {
+            updateStatus = "Plugin-Ordner konnte nicht ermittelt werden."
+            return
+        }
+
+        var target = dir + "/AI-Notation-Studio.qml"
+        if (!updaterFile.isPathWriteable(target)) {
+            updateStatus = "Plugin-Datei ist für MuseScore nicht schreibbar: " + target
+            return
+        }
+
+        updaterFile.source = target
+        var ok = updaterFile.write(updateSourceText)
+        if (!ok) {
+            updateStatus = "Update konnte nicht geschrieben werden."
+            return
+        }
+
+        updateStatus = "v" + updateRemoteVersion +
+                       " installiert. MuseScore neu starten, damit die neue Version aktiv wird."
+        updateSourceText = ""
     }
 
     function providerName() {
@@ -217,7 +357,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.5.9",
+                version: "0.6.0",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -1238,10 +1378,51 @@ MuseScore {
             spacing: 10
 
             Label {
-                text: "AI Notation Studio · v0.5.9"
+                text: "AI Notation Studio · v0.6.0"
                 color: "white"
                 font.pixelSize: 28
                 font.bold: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                ComboBox {
+                    id: updateChannelBox
+                    model: ["Stable", "Testversion"]
+                    currentIndex: settings.updateChannel === "main" ? 0 : 1
+                    font.pixelSize: 14
+                    onCurrentIndexChanged: {
+                        settings.updateChannel = currentIndex === 0 ? "main" : "develop"
+                        updateRemoteVersion = ""
+                        updateSourceText = ""
+                        updateStatus = "Noch nicht geprüft."
+                    }
+                }
+
+                Button {
+                    text: updateBusy ? "Prüfe …" : "Update prüfen"
+                    enabled: !updateBusy
+                    font.pixelSize: 14
+                    onClicked: checkForUpdate()
+                }
+
+                Button {
+                    text: "Update installieren"
+                    visible: updateSourceText !== ""
+                    enabled: updateSourceText !== "" && !updateBusy
+                    font.pixelSize: 14
+                    onClicked: installUpdate()
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    text: updateStatus
+                    color: "#d7d7d7"
+                    font.pixelSize: 14
+                    wrapMode: Text.WordWrap
+                }
             }
 
             GridLayout {
@@ -1446,7 +1627,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.5.9 stabilisiert v0.5.8: undefinierte Auftragsvariable behoben, vorhandene Noten vor Löschung geschützt, Titel nur noch als workTitle-Metadatum gesetzt und startCmd/endCmd-Rollback abgesichert."
+                text: "v0.6.0 ergänzt eine integrierte GitHub-Updatefunktion. Stable lädt von main, Testversion von develop; die neue QML-Datei wird geprüft und im Plugin-Ordner ersetzt. Aktiv wird sie nach einem MuseScore-Neustart."
             }
         }
     }

@@ -42,3 +42,12 @@ Es gibt nur einen Updateweg über den aktuellen Stand auf GitHub/`main`.
 Ab v0.7.0 gibt es nur noch eine aktive Entwicklungslinie: `main`.
 
 Rollback erfolgt über versionierte Git-Commits, nicht über parallele Nutzerzweige.
+
+## Bedienoberfläche v0.7.4
+
+Die Oberfläche trennt jetzt bewusst zwei Arbeitsbereiche:
+
+- **Komposition / Analyse**: eigentlicher musikalischer Auftrag an die KI.
+- **Partitur-Chat**: Gespräch über die Partitur; Änderungen werden nur vorbereitet und erst nach bewusster Übernahme zum Kompositionsauftrag.
+
+Ein neuer **Info**-Button erklärt die Arbeitsweise direkt im Plugin.

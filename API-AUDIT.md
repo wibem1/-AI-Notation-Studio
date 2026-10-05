@@ -1,54 +1,131 @@
-# API-Audit – AI Notation Studio v0.5.8
+# API-Audit – AI Notation Studio v0.7.0
 
-Dieser Audit bezieht sich ausschließlich auf den tatsächlich hochgeladenen Quellcode `AI-Notation-Studio.qml`.
+Ziel: MuseScore Studio 4.7.x.
 
-## Aktuelle Plugin-Architektur
+## Grundarchitektur
 
-v0.5.8 verwendet die klassische QML-Plugin-Schnittstelle:
+Das Plugin verwendet weiterhin die klassische QML-Plugin-API:
 
 - `import MuseScore 3.0`
 - `MuseScore { ... }`
-- `menuPath`
-- `requiresScore`
-- `pluginType: "dialog"`
 - `curScore`
+- `FileIO 3.0`
 
-Die neuere MuseScore-4.7-Extension-Architektur mit `manifest.json`, `ExtensionBlank` und `MuseApi.*` ist **nicht** Bestandteil von v0.5.8.
+Diese API ist im aktuellen MuseScore-4.7-Quellcode unter `src/engraving/api/v1` weiterhin vorhanden.
 
-## Im aktuellen Code verwendete zentrale MuseScore-Zugriffe
+## Verwendete Score-/Selection-/Cursor-API
+
+Quellcode- bzw. API-verifiziert:
 
 - `curScore.selection`
 - `selection.elements`
 - `selection.isRange`
 - `selection.clear()`
 - `selection.selectRange(...)`
+- `curScore.parts`
+- `curScore.nstaves`
+- `curScore.nmeasures`
+- `curScore.firstMeasure`
+- `curScore.lastMeasure`
 - `curScore.newCursor()`
-- `curScore.appendPart(...)`
 - `curScore.appendMeasures(...)`
-- `curScore.startCmd()`
-- `curScore.endCmd()`
-- Cursor-Zugriffe auf Staff, Voice, Tick, Duration und Note
-- `cmd("time-delete")`
+- `curScore.appendPart(...)`
+- `curScore.appendPartByMusicXmlId(...)`
+- `curScore.startCmd(...)`
+- `curScore.endCmd(rollback)`
+- `curScore.setMetaTag(...)`
+- `cursor.staffIdx`
+- `cursor.voice`
+- `cursor.rewind(...)`
+- `cursor.rewindToTick(...)`
+- `cursor.setDuration(...)`
+- `cursor.addNote(...)`
+- `cursor.add(...)`
 
-## Verifizierte Besonderheit
+`selectRange` verwendet exklusives `endStaff`; deshalb bleibt `0 .. curScore.nstaves` korrekt.
 
-`selection.selectRange(startTick, endTick, startStaff, endStaff)` behandelt `endStaff` exklusiv.
+## Elementerzeugung
 
-Daher ist für alle Systeme korrekt:
+Im aktuellen MuseScore-4.7-API-v1-Quellcode verifiziert:
 
-```qml
-selection.selectRange(startTick, endTick, 0, curScore.nstaves)
-```
+- `newElement(Element.KEYSIG)`
+- `actualKey`
+- `concertKey`
+- `newElement(Element.TEMPO_TEXT)`
 
-## Noch zu auditieren
+## MuseScore-Actions
 
-Vor weiteren größeren Umbauten müssen die folgenden im v0.5.8-Code verwendeten Stellen vollständig gegen die aktuelle MuseScore-4.7-Dokumentation bzw. den Quellcode geprüft werden:
+Im aktuellen 4.7-Quellcode registriert und daher nicht geraten:
 
-- `cmd("time-delete")`
-- `appendPart(...)` und verwendete Instrument-IDs
-- `startCmd()/endCmd()`
+- `time-delete`
+- `del-empty-measures`
+- `action://notation/undo`
+- `action://notation/redo`
+
+Undo/Redo verwendet ausschließlich MuseScores eigene Historie.
+
+## Parts und Instrumente
+
+`Part.startTrack`, `Part.endTrack` und `Part.instrumentId` sind im API-v1-Quellcode vorhanden.
+
+Verifizierte interne Instrument-IDs:
+
+- `violin`
+- `viola`
+- `violoncello`
+- `contrabass`
+- `piano`
+- `flute`
+- `oboe`
+- `bb-clarinet`
+- `bassoon`
+- `horn`
+- `bb-trumpet`
+- `trombone`
+- `tuba`
+
+## Updater
+
+`FileIO` stellt ausdrücklich bereit:
+
+- `pluginDirectoryPath()`
+- `isPathWriteable(path)`
+- `write(data)`
+
+Damit wird kein fest codierter macOS-Pfad verwendet.
+
+## Neue Funktionen v0.7.0
+
+### Fortsetzen
+
+Verwendet nur:
+- gelesene Selection-Daten
+- vorhandene `score.parts`
 - Cursor-Schreiboperationen
-- Verhalten beim Löschen überschüssiger Takte
-- Verhalten beim Erzeugen von Klavierparts mit zwei Systemen
+- `appendMeasures`, falls zusätzlicher Platz nötig ist
 
-Bis dieser Audit abgeschlossen ist, werden diese Punkte nicht als vollständig abgesichert bezeichnet.
+Zur Sicherheit wird nur fortgesetzt, wenn die Auswahl am Partiturende endet.
+
+### Motiv / Variante / andere Besetzung
+
+Neue Zielparts werden ausschließlich über `appendPart(instrumentId)` angelegt. Noten werden über Cursor eingefügt.
+
+### Partitur-Chat
+
+Der Chat verwendet keine neue MuseScore-Schreib-API. Er liest nur:
+- Partiturstruktur
+- markierte Elemente
+
+Im Modus **Ändern** erzeugt der Chat nur einen Textauftrag.
+
+### Diagnose / Protokoll / Token
+
+Keine zusätzlichen MuseScore-Schreibzugriffe.
+
+## Noch praktisch zu verifizieren
+
+- Verhalten der neuen Modi in realen mehrstimmigen Partituren
+- Klavierparts mit zwei Systemen
+- Fortsetzen bei Taktartwechseln
+- sichtbares Titelverhalten von `workTitle`
+- alle neu hinzugefügten Instrument-IDs im Zielsystem

@@ -1,24 +1,40 @@
 # Changelog
 
-Ab diesem Repository-Stand wird die Entwicklung fortlaufend dokumentiert.
+## 0.7.0
 
-## 0.5.8 — aktueller Baseline-Stand
+Neue Funktionen:
 
-- Auswahl wird über `curScore.selection.elements` gelesen.
-- Analyse einer markierten Passage.
-- Komposition einer neuen Stimme zu einer markierten Passage.
-- Freie Komposition ohne Vorlage.
-- Zwei-Stufen-Verfahren:
-  1. musikalische Komposition
-  2. technische Umsetzung für MuseScore
-- Provider: OpenAI, Anthropic, Google.
-- Instrumente für neue Stimmen: Violine, Viola, Cello, Kontrabass, Klavier.
-- Korrektur von `selection.selectRange(...)`: `endStaff` ist exklusiv; daher wird `curScore.nstaves` verwendet.
+- **Fortsetzen**: setzt eine Auswahl am Partiturende in den vorhandenen Parts fort.
+- **Aus Motiv entwickeln**: entwickelt eine markierte Passage zu einer neuen musikalischen Fassung.
+- **Variante erzeugen**: erzeugt pro Lauf genau eine Variante.
+- **Für andere Besetzung bearbeiten**: erzeugt eine idiomatische Neuinstrumentierung der Auswahl.
+- **Partitur-Chat**:
+  - Besprechen: keine Partituränderung
+  - Ändern: erzeugt einen konkreten Bearbeitungsauftrag, schreibt aber nicht automatisch
+- **Rückgängig/Wiederholen** über MuseScores eigene Undo-Historie.
+- **Kommunikationsprotokoll** mit Nutzer-, App-, KI-, API- und MuseScore-Ereignissen.
+- **Diagnose** mit Pluginversion, Modell, Modus, Partiturstruktur, Auswahl und technischen Daten.
+- **Tokenkontrolle** für OpenAI, Anthropic und Google.
+- Zielbesetzungen erweitert um Flöte, Oboe, Klarinette, Fagott, Horn, Trompete, Posaune und Tuba.
 
-## Frühere Stände
+Bestehende Prinzipien:
 
-Frühere Versionen entstanden vor Einrichtung dieses Git-Repositories. Sie sind nicht vollständig als Git-Historie vorhanden.
+- Zwei-Stufen-Verfahren bleibt erhalten.
+- Keine Vorentwürfe.
+- Update weiterhin ausschließlich über `main`.
 
-## Hinweis
+## 0.6.0
 
-Die zwischenzeitlich in der Dokumentation auftauchende Versionsreihe 0.6.x–0.8.x war keine reale veröffentlichte Entwicklungslinie dieses Plugins und wurde entfernt.
+- integrierte GitHub-Updatefunktion
+- ein einziger Updatekanal über `main`
+
+## 0.5.9
+
+- `userText`-Fehler behoben
+- Schutz vor versehentlichem Löschen vorhandener Noten
+- Titel als `workTitle`
+- Transaktions-Rollback abgesichert
+
+## 0.5.8
+
+Erster belastbarer Git-Baseline-Stand.

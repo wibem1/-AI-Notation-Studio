@@ -1,44 +1,48 @@
 # Entwicklung
 
-## Grundsatz
+## Ausgangspunkt
 
-Das GitHub-Repository ist ab jetzt die maßgebliche Quelle. ZIP-Dateien sind nur noch abgeleitete Test- oder Release-Artefakte.
+Der reale Git-Baseline-Stand ist **v0.5.8**.
+
+Aktuelle Architektur:
+
+- QML-Plugin mit `import MuseScore 3.0`
+- Root: `MuseScore { ... }`
+- `pluginType: "dialog"`
+- Zielanwendung: MuseScore Studio 4.x
+- Quellcode: `AI-Notation-Studio.qml`
+
+Ein Umbau auf die neuere Extension-API ist eine mögliche spätere Architekturänderung, aber **nicht** Bestandteil von v0.5.8.
 
 ## Branches
 
-- `main`: nur geprüfte und dokumentierte Stände.
-- `develop`: laufende Entwicklung.
-- größere Änderungen optional in `feature/...`-Branches.
+- `main`: letzter tatsächlich verwendeter/freigegebener Stand
+- `develop`: laufende Entwicklung
+- größere Umbauten bei Bedarf in `feature/...`
 
-## Release-Ablauf
+## Verbindlicher Ablauf
 
-1. Änderung auf `develop`.
-2. Versionsnummer und `CHANGELOG.md` aktualisieren.
-3. `API-AUDIT.md`, `KNOWN-ISSUES.md` und `TESTS.md` prüfen.
-4. Testcheck vollständig durchführen.
-5. Release Candidate festhalten.
-6. Erst nach bestandenem Praxistest nach `main` übernehmen und als stabil markieren.
+1. Ausgangsfehler oder gewünschte Funktion dokumentieren.
+2. MuseScore-API prüfen.
+3. Änderung auf `develop`.
+4. Versionsnummer nur ändern, wenn der Plugin-Code geändert wurde.
+5. `CHANGELOG.md`, `API-AUDIT.md` und `KNOWN-ISSUES.md` aktualisieren.
+6. Testplan durchführen.
+7. Erst danach nach `main` übernehmen.
 
-## Architektur
+## Musikalische Architektur
 
-AI Notation Studio verwendet MuseScore Studio 4.7 und API-Version 2.
+Für Kompositionsfunktionen gilt das Zwei-Stufen-Prinzip:
 
-Musikalische Funktionen folgen grundsätzlich einem Zwei-Stufen-Prinzip:
+1. **Musikalische Komposition** ohne JSON-/Tick-Zwang.
+2. **Technische Umsetzung** der fertigen musikalischen Fassung für MuseScore.
 
-1. **Musikalische Stufe** — Komposition, Analyse oder Bearbeitung ohne technische Ausgabezwänge.
-2. **Technische Stufe** — Umsetzung der fertigen musikalischen Fassung in MuseScore-Daten.
+Dieses Prinzip hat sich qualitativ bewährt und soll erhalten bleiben.
 
-Der Chat ist davon getrennt:
+## Entwicklungsregeln
 
-- **Besprechen** verändert die Partitur nie.
-- **Ändern** erzeugt zunächst nur einen expliziten Bearbeitungsauftrag.
-- Eine Partituränderung erfolgt erst über einen normalen Arbeitsmodus.
-
-## Qualitätsregeln
-
-- Keine neue MuseScore-Funktion ohne API-Prüfung.
-- Keine geratenen Action-Codes.
-- Keine API-Schlüssel in Diagnose oder Protokoll.
-- Keine Versionsnummer ohne dokumentierte Änderung.
-- Keine Veröffentlichung als `stable`, bevor `TESTS.md` vollständig bestanden ist.
-- Bei einem Fehler zuerst reproduzieren und diagnostizieren, nicht sofort patchen.
+- Keine Patch-Ketten ohne Ursachenanalyse.
+- Keine geratenen MuseScore-API-Aufrufe.
+- Keine Behauptung „behoben“, bevor die Änderung praktisch getestet wurde.
+- Keine neue Funktion ohne Dokumentation.
+- Repository statt lose ZIP-Folge als maßgebliche Entwicklungsbasis.

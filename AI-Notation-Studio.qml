@@ -40,7 +40,6 @@ MuseScore {
         property string keyAnthropic: ""
         property string keyGoogle: ""
         property int freeCompositionCounter: 0
-        property string updateChannel: "develop"
     }
 
     FileIO {
@@ -74,17 +73,8 @@ MuseScore {
         return 0
     }
 
-    function updateBranch() {
-        return settings.updateChannel === "main" ? "main" : "develop"
-    }
-
-    function updateChannelLabel() {
-        return updateBranch() === "main" ? "Stable" : "Testversion"
-    }
-
     function updateRawUrl() {
-        return "https://raw.githubusercontent.com/wibem1/AI-Notation-Studio/" +
-               updateBranch() + "/AI-Notation-Studio.qml"
+        return "https://raw.githubusercontent.com/wibem1/AI-Notation-Studio/main/AI-Notation-Studio.qml"
     }
 
     function extractPluginVersion(text) {
@@ -105,7 +95,7 @@ MuseScore {
         updateBusy = true
         updateRemoteVersion = ""
         updateSourceText = ""
-        updateStatus = "Prüfe " + updateChannelLabel() + " …"
+        updateStatus = "Prüfe auf Update …"
 
         var xhr = new XMLHttpRequest()
         xhr.open("GET", updateRawUrl())
@@ -134,8 +124,7 @@ MuseScore {
             } else if (cmp === 0) {
                 updateStatus = "Aktuell: v" + currentVersionString()
             } else {
-                updateStatus = "Installiert v" + currentVersionString() +
-                               " ist neuer als " + updateChannelLabel() + " v" + remote + "."
+                updateStatus = "Installiert v" + currentVersionString() + " ist neuer als GitHub v" + remote + "."
             }
         }
 
@@ -1388,19 +1377,6 @@ MuseScore {
                 Layout.fillWidth: true
                 spacing: 8
 
-                ComboBox {
-                    id: updateChannelBox
-                    model: ["Stable", "Testversion"]
-                    currentIndex: settings.updateChannel === "main" ? 0 : 1
-                    font.pixelSize: 14
-                    onCurrentIndexChanged: {
-                        settings.updateChannel = currentIndex === 0 ? "main" : "develop"
-                        updateRemoteVersion = ""
-                        updateSourceText = ""
-                        updateStatus = "Noch nicht geprüft."
-                    }
-                }
-
                 Button {
                     text: updateBusy ? "Prüfe …" : "Update prüfen"
                     enabled: !updateBusy
@@ -1627,7 +1603,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.6.0 ergänzt eine integrierte GitHub-Updatefunktion. Stable lädt von main, Testversion von develop; die neue QML-Datei wird geprüft und im Plugin-Ordner ersetzt. Aktiv wird sie nach einem MuseScore-Neustart."
+                text: "v0.6.0 ergänzt eine integrierte GitHub-Updatefunktion. Es gibt nur einen Updateweg: die aktuelle Version auf GitHub/main. Die neue QML-Datei wird geprüft und im Plugin-Ordner ersetzt. Aktiv wird sie nach einem MuseScore-Neustart."
             }
         }
     }

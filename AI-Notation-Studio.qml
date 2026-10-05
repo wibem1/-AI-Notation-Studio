@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.1"
+    version: "0.7.2"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -384,7 +384,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.1",
+                version: "0.7.2",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -813,42 +813,14 @@ MuseScore {
         if (!score || isNaN(wantedMeasures) || wantedMeasures < 1)
             return false
 
-        // MuseScore-Befehle außerhalb von startCmd() ausführen.
-        // Die frische Ausgangspartitur ist leer, daher löschen wir ihren
-        // gesamten Taktbereich als Zeitbereich. MuseScore behält mindestens
-        // einen Takt; anschließend baut der Aufrufer exakt auf wantedMeasures auf.
-        if (!score.firstMeasure || !score.lastMeasure)
-            return false
+        // Nicht mehr versuchen, eine frische MuseScore-Partitur vorab
+        // per Bereichslöschung zu verkürzen. Das ist für leere Takte unnötig
+        // und erwies sich in der Praxis als unzuverlässig.
+        // Wir stellen nur sicher, dass mindestens genügend Takte vorhanden sind.
+        if (score.nmeasures < wantedMeasures)
+            score.appendMeasures(wantedMeasures - score.nmeasures)
 
-        var startTick = score.firstMeasure.tick.ticks
-        var endTick = score.lastMeasure.tick.ticks + score.lastMeasure.ticks.ticks
-
-        score.selection.clear()
-
-        var ok = score.selection.selectRange(
-                    startTick,
-                    endTick,
-                    0,
-                    score.nstaves)
-
-        if (!ok)
-            return false
-
-        if (selectedRangeContainsMusic(score)) {
-            score.selection.clear()
-            statusText = "Abbruch: Die Ausgangspartitur enthält bereits Noten. Freie Komposition löscht vorhandenes musikalisches Material nicht."
-            return false
-        }
-
-        cmd("time-delete")
-        score.selection.clear()
-
-        // Zusätzliche Bereinigung, falls MuseScore noch leere Endtakte behält.
-        cmd("del-empty-measures")
-        score.selection.clear()
-
-        // Erwartung: 0 oder 1 Resttakt, jedenfalls nicht mehr als wantedMeasures.
-        return score.nmeasures <= wantedMeasures
+        return score.nmeasures >= wantedMeasures
     }
 
 
@@ -860,35 +832,15 @@ MuseScore {
         if (score.nmeasures <= wantedMeasures)
             return true
 
-        // First measure that must be removed: wantedMeasures + 1
-        var m = score.firstMeasure
-        var count = 1
-        while (m && count < wantedMeasures + 1) {
-            m = m.nextMeasure
-            count++
-        }
-
-        if (!m)
-            return false
-
-        var startTick = m.tick.ticks
-        var last = score.lastMeasure
-        var endTick = last.tick.ticks + last.ticks.ticks
-
-        score.selection.clear()
-        var ok = score.selection.selectRange(startTick, endTick, 0, score.nstaves)
-        if (!ok)
-            return false
-
-        // "time-delete" is MuseScore's command for deleting a selected measure range.
-        cmd("time-delete")
-        score.selection.clear()
-
-        // Optional cleanup of any remaining empty tail.
+        // MuseScore 4.7 stellt dafür ausdrücklich die Aktion
+        // "Remove empty trailing measures" bereit. Sie arbeitet am Partiturende
+        // und braucht keine manuell erzeugte Bereichsauswahl.
         cmd("del-empty-measures")
+        score.selection.clear()
 
         return score.nmeasures <= wantedMeasures
     }
+
 
     function insertFreeComposition() {
         var cmdStarted = false
@@ -942,16 +894,6 @@ MuseScore {
 
             if (curScore.nmeasures < freeMeasures)
                 curScore.appendMeasures(freeMeasures - curScore.nmeasures)
-
-            // Falls MuseScore bei der Bereinigung mehr Takte als gewünscht
-            // stehen ließ, brechen wir ab statt in eine falsche Struktur zu schreiben.
-            if (curScore.nmeasures > freeMeasures) {
-                curScore.endCmd(true)
-                cmdStarted = false
-                statusText = "Abbruch: MuseScore ließ nach der Leer-Takt-Bereinigung " +
-                             curScore.nmeasures + " Takte stehen; erwartet: " + freeMeasures + "."
-                return
-            }
 
             // Weitere Parts anlegen.
             for (var p = 1; p < instruments.length; p++) {
@@ -1038,11 +980,21 @@ MuseScore {
             var tempoBpm = Number(data.tempoBpm || 0)
             var tempoSet = applyTempo(curScore, tempoBpm)
 
-            // Keine UI-Löschbefehle innerhalb startCmd. Nur noch prüfen.
-            var trimOk = (curScore.nmeasures === freeMeasures)
-
+            // Erst die musikalischen Daten vollständig einfügen und die
+            // MuseScore-Transaktion sauber abschließen. Danach können wirklich
+            // nur noch die leeren Endtakte entfernt werden.
             curScore.endCmd()
             cmdStarted = false
+
+            var beforeTrim = curScore.nmeasures
+            var trimOk = trimScoreToMeasureCount(curScore, freeMeasures)
+            var afterTrim = curScore.nmeasures
+            logEvent("MUSESCORE", "Leere Endtakte bereinigt", {
+                before: beforeTrim,
+                requested: freeMeasures,
+                after: afterTrim,
+                success: trimOk
+            })
 
             var details = []
             for (var d = 0; d < finalParts.length; d++) {
@@ -1057,7 +1009,7 @@ MuseScore {
                          (keySet ? " · Tonart: " + (keyName !== "" ? keyName : keyFifths + " Vorzeichen") : "") +
                          (tempoSet ? " · Tempo: ♩ = " + Math.round(tempoBpm) : "") +
                          (trimOk ? " · Partitur: " + curScore.nmeasures + " Takte" :
-                                   " · WARNUNG: Taktkürzung nicht vollständig") + "."
+                                   " · WARNUNG: leere Endtakte blieben stehen (" + curScore.nmeasures + " Takte)") + "."
         } catch (e) {
             if (cmdStarted) {
                 try { curScore.endCmd(true) } catch (ignore) {}
@@ -1843,7 +1795,7 @@ MuseScore {
             spacing: 10
 
             Label {
-                text: "AI Notation Studio · v0.7.1"
+                text: "AI Notation Studio · v0.7.2"
                 color: "white"
                 font.pixelSize: 28
                 font.bold: true
@@ -2171,7 +2123,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.1: Updateinstallation mit sichtbarer Fehlerdiagnose und Nachkontrolle der geschriebenen Plugin-Datei. Alle Funktionen aus v0.7.0 bleiben erhalten."
+                text: "v0.7.2: Leere Endtakte werden nicht mehr vorab per Bereichslöschung behandelt. Die Komposition wird zuerst eingefügt; danach ruft das Plugin ausschließlich MuseScores eigene Aktion „Remove empty trailing measures“ auf und kontrolliert die resultierende Taktzahl."
             }
         }
     }

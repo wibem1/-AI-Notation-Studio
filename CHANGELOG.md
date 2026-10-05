@@ -38,3 +38,11 @@ Bestehende Prinzipien:
 ## 0.5.8
 
 Erster belastbarer Git-Baseline-Stand.
+
+## 0.7.2
+
+- Entfernung leerer Endtakte neu aufgebaut.
+- Kein Vorab-Löschen leerer Takte mehr per `time-delete`.
+- Freie Komposition wird zuerst vollständig eingefügt.
+- Danach wird ausschließlich MuseScores eigene Aktion `del-empty-measures` verwendet.
+- Resultierende Taktzahl wird geprüft und im Kommunikationsprotokoll festgehalten.

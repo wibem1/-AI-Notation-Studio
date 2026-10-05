@@ -96,3 +96,13 @@
 - [ ] Ohne veröffentlichte `AI-Notation-Studio-App.qml` fällt die Updateprüfung sauber auf die monolithische Datei zurück.
 - [ ] Späterer Live-Test: eine veröffentlichte App-Version wird als versionierte lokale QML-Datei geschrieben und nach Versionsprüfung ohne MuseScore-Neustart geladen.
 - [ ] Nach erneutem Start wird die zuletzt aktivierte Live-App aus den gespeicherten Einstellungen geladen.
+
+## v0.8.0 – Live-Update-Test
+
+- [ ] In v0.7.10 findet **Update prüfen** v0.8.0 als Live-Update.
+- [ ] **Update installieren** schreibt und prüft die lokale versionierte App-Datei.
+- [ ] Direkt danach wechselt die sichtbare Oberfläche auf **v0.8.0**, ohne MuseScore-Neustart.
+- [ ] Komposition/Analyse, Chat, Gedächtnis und **Technisches** sind weiterhin vorhanden.
+- [ ] Provider/Modell/API-Key bleiben erhalten.
+- [ ] Schließen des Plugin-Fensters beendet MuseScore nicht.
+- [ ] Nach einem späteren MuseScore-Neustart lädt der Host die gespeicherte Live-App wieder.

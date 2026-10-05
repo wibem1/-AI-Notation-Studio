@@ -8,11 +8,10 @@
 
 ## B. Updatefunktion
 
-- [ ] Kanalwahl Stable/Testversion funktioniert.
-- [ ] `Update prüfen` erreicht GitHub.
+- [ ] `Update prüfen` erreicht GitHub/main.
 - [ ] gleiche Version wird als aktuell gemeldet.
 - [ ] ältere Remote-Version führt nicht zu Downgrade.
-- [ ] neuere Testversion wird erkannt.
+- [ ] neuere Version wird erkannt.
 - [ ] `Update installieren` schreibt erfolgreich in den Plugin-Ordner.
 - [ ] nach MuseScore-Neustart ist die neue Version aktiv.
 - [ ] Updatefehler beschädigt die vorhandene QML-Datei nicht.
@@ -25,12 +24,6 @@
 - [ ] Freie Komposition funktioniert.
 - [ ] Provider/Keys bleiben erhalten.
 - [ ] Zwei-Stufen-Verfahren bleibt unverändert.
-
-## D. Stabilitätskorrekturen
-
-- [ ] vorhandene Noten werden vor Taktlöschung geschützt.
-- [ ] Titel wird nicht doppelt eingefügt.
-- [ ] Rollback funktioniert sauber.
 
 ## Freigabe
 

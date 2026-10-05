@@ -72,3 +72,12 @@
 - [ ] Generelles Gedächtnis gilt in beiden Scores.
 - [ ] Score-Gedächtnis lässt sich leeren, ohne das generelle Gedächtnis zu verändern.
 - [ ] Generelles Gedächtnis lässt sich leeren, ohne Score-Gedächtnisse zu verändern.
+
+## v0.7.8 – Technisches / Updater-Test
+
+- [ ] v0.7.7 erkennt v0.7.8 über **Update prüfen**.
+- [ ] **Update installieren** schreibt v0.7.8 ohne manuellen Terminal-Schritt.
+- [ ] Nach MuseScore-Neustart steht oben v0.7.8.
+- [ ] Provider, Modell und API-Key stehen unten unter **Technisches**.
+- [ ] Der obere Bereich **Komposition / Analyse** enthält keine Provider-/Key-Felder mehr.
+- [ ] Gespeicherte Provider-, Modell- und Key-Werte bleiben erhalten.

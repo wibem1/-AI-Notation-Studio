@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wibem1/AI-Notation-Studio/AI-NOTATION-MAXI-v0.1.schema.json",
+  "title": "AI Notation Maxi v0.1",
+  "type": "object",
+  "required": ["format","version","score","parts"],
+  "properties": {
+    "format": { "const": "AI-Notation-Maxi" },
+    "version": { "const": "0.1" },
+    "score": {
+      "type": "object",
+      "required": ["title","timeSignature","tempo"],
+      "properties": {
+        "title": { "type": "string" },
+        "composer": { "type": "string" },
+        "key": { "type": "string" },
+        "timeSignature": { "type": "string", "pattern": "^[0-9]+/[0-9]+$" },
+        "tempo": { "$ref": "#/$defs/tempo" }
+      },
+      "additionalProperties": false
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/part" }
+    },
+    "globalMarkings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/globalMarking" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "position": {
+      "type": "object",
+      "required": ["measure","beat"],
+      "properties": {
+        "measure": { "type": "integer", "minimum": 1 },
+        "beat": { "type": "number", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "duration": {
+      "type": "string",
+      "enum": ["whole","half","quarter","eighth","16th","32nd","64th"]
+    },
+    "pitch": {
+      "type": "string",
+      "pattern": "^[A-G](bb|b|#|##)?-?[0-9]+$"
+    },
+    "tempo": {
+      "type": "object",
+      "required": ["bpm"],
+      "properties": {
+        "text": { "type": "string" },
+        "bpm": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "part": {
+      "type": "object",
+      "required": ["id","instrument","measures"],
+      "properties": {
+        "id": { "type": "string" },
+        "instrument": { "type": "string" },
+        "measures": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/measure" }
+        },
+        "markings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/marking" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "measure": {
+      "type": "object",
+      "required": ["number","voices"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "voices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["voice","events"],
+            "properties": {
+              "voice": { "type": "integer", "minimum": 1, "maximum": 4 },
+              "events": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/event" }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "baseNote": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "duration": { "$ref": "#/$defs/duration" },
+        "dots": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "tie": { "type": "string", "enum": ["start","stop"] },
+        "articulations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["staccato","staccatissimo","tenuto","accent","marcato"]
+          },
+          "uniqueItems": true
+        },
+        "fermata": {
+          "type": "string",
+          "enum": ["veryShort","short","normal","long","veryLong"]
+        },
+        "ornament": {
+          "type": "string",
+          "enum": ["trill","mordent","invertedMordent","turn","invertedTurn"]
+        },
+        "arpeggio": {
+          "type": "string",
+          "enum": ["normal","up","down","bracket","upStraight","downStraight"]
+        },
+        "tremolo": {
+          "type": "string",
+          "enum": ["eighth","16th","32nd","64th","buzzRoll"]
+        },
+        "grace": {
+          "type": "string",
+          "enum": ["grace4","grace8","grace16","grace32"]
+        }
+      }
+    },
+    "event": {
+      "oneOf": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/baseNote" },
+            {
+              "type": "object",
+              "required": ["type","pitch","duration"],
+              "properties": {
+                "type": { "const": "note" },
+                "pitch": { "$ref": "#/$defs/pitch" }
+              }
+            }
+          ],
+          "unevaluatedProperties": false
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/baseNote" },
+            {
+              "type": "object",
+              "required": ["type","pitches","duration"],
+              "properties": {
+                "type": { "const": "chord" },
+                "pitches": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": { "$ref": "#/$defs/pitch" }
+                }
+              }
+            }
+          ],
+          "unevaluatedProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","duration"],
+          "properties": {
+            "type": { "const": "rest" },
+            "duration": { "$ref": "#/$defs/duration" },
+            "dots": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "fermata": {
+              "type": "string",
+              "enum": ["veryShort","short","normal","long","veryLong"]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","ratio","duration"],
+          "properties": {
+            "type": { "const": "tupletStart" },
+            "ratio": { "type": "string", "pattern": "^[0-9]+:[0-9]+$" },
+            "duration": { "$ref": "#/$defs/duration" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "tupletEnd" } },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "marking": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type","position","value"],
+          "properties": {
+            "type": { "const": "dynamic" },
+            "position": { "$ref": "#/$defs/position" },
+            "value": {
+              "type": "string",
+              "enum": ["pppppp","ppppp","pppp","ppp","pp","p","mp","mf","f","ff","fff","ffff","fffff","ffffff","fp","pf","sf","sfz","sff","sffz","sfff","sfffz","sfp","sfpp","rfz","rf","fz"]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","kind","start","end"],
+          "properties": {
+            "type": { "const": "hairpin" },
+            "kind": { "type": "string", "enum": ["crescendo","diminuendo","crescendoLine","diminuendoLine"] },
+            "start": { "$ref": "#/$defs/position" },
+            "end": { "$ref": "#/$defs/position" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","startRef","endRef"],
+          "properties": {
+            "type": { "const": "slur" },
+            "startRef": { "type": "string" },
+            "endRef": { "type": "string" },
+            "style": { "type": "string", "enum": ["solid","dotted","dashed","wideDashed"] }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","position","text"],
+          "properties": {
+            "type": { "const": "expression" },
+            "position": { "$ref": "#/$defs/position" },
+            "text": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","position","text"],
+          "properties": {
+            "type": { "const": "technique" },
+            "position": { "$ref": "#/$defs/position" },
+            "text": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","position"],
+          "properties": {
+            "type": { "const": "breath" },
+            "position": { "$ref": "#/$defs/position" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","start","end","kind"],
+          "properties": {
+            "type": { "const": "ottava" },
+            "kind": { "type": "string", "enum": ["8va","8vb","15ma","15mb","22ma","22mb"] },
+            "start": { "$ref": "#/$defs/position" },
+            "end": { "$ref": "#/$defs/position" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","start","end"],
+          "properties": {
+            "type": { "const": "pedal" },
+            "start": { "$ref": "#/$defs/position" },
+            "end": { "$ref": "#/$defs/position" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","startRef","endRef","style"],
+          "properties": {
+            "type": { "const": "glissando" },
+            "startRef": { "type": "string" },
+            "endRef": { "type": "string" },
+            "style": { "type": "string", "enum": ["chromatic","whiteKeys","blackKeys","diatonic","portamento"] }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","start","end","kind"],
+          "properties": {
+            "type": { "const": "trillLine" },
+            "kind": { "type": "string", "enum": ["trill","upprall","downprall","prallprall"] },
+            "start": { "$ref": "#/$defs/position" },
+            "end": { "$ref": "#/$defs/position" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "globalMarking": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type","position","tempo"],
+          "properties": {
+            "type": { "const": "tempo" },
+            "position": { "$ref": "#/$defs/position" },
+            "tempo": { "$ref": "#/$defs/tempo" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","position","text"],
+          "properties": {
+            "type": { "const": "staffText" },
+            "position": { "$ref": "#/$defs/position" },
+            "text": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

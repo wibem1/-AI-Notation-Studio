@@ -1,51 +1,59 @@
-# AI Notation Studio
+# AI Notation Studio v0.5.8
 
-MuseScore-Studio-4.7-Extension für KI-gestützte Analyse, Komposition und Bearbeitung direkt an der Partitur.
+## Konkrete Ursache der bisherigen Taktlösch-Fehler
 
-## Entwicklungsstatus
+Die MuseScore-API dokumentiert und implementiert:
 
-**Aktueller Stand: 0.8.0 Release Candidate**
+```cpp
+selectRange(int startTick, int endTick, int startStaff, int endStaff)
+```
 
-Dieser Stand ist noch nicht als `stable` freigegeben. Vor einer stabilen Freigabe muss der Testplan in `TESTS.md` vollständig durchgeführt werden.
+Dabei gilt:
 
-## Funktionen
+- `startTick`: inklusive
+- `endTick`: exklusive
+- `startStaff`: inklusive
+- `endStaff`: **exklusive**
 
-- Auswahl analysieren
-- neue Stimme zu einer Auswahl komponieren
-- freie Komposition
-- vorhandene Komposition fortsetzen
-- aus einem Motiv entwickeln
-- eine Variante erzeugen
-- für eine andere Besetzung bearbeiten
-- partiturbezogener Chat: **Besprechen** / **Ändern**
-- MuseScore-eigenes Undo/Redo
-- Diagnose und Kommunikationsprotokoll
-- Token- und Kostenkontrolle
+MuseScore prüft intern:
 
-## Architektur
+```cpp
+if (startStaff >= endStaff) {
+    return false;
+}
+```
 
-- MuseScore Studio 4.7.x
-- Extension API 2
-- `manifest.json`
-- `ExtensionBlank`
-- `MuseApi.Engraving`
-- Zwei-Stufen-Verfahren: **musikalische Fassung → technische MuseScore-Umsetzung**
+Unsere bisherigen Versionen verwendeten:
 
-## Entwicklungsregeln
+```qml
+score.selection.selectRange(startTick, endTick, 0, score.nstaves - 1)
+```
 
-Das Repository ist ab jetzt die maßgebliche Quelle.
+Bei einer Ausgangspartitur mit genau einem System (`nstaves == 1`) wurde daraus:
 
-- `main`: geprüfte, dokumentierte Stände
-- `develop`: laufende Entwicklung
-- keine neue Version ohne Changelog
-- keine neue MuseScore-Funktion ohne API-Audit
-- keine Stable-Freigabe ohne Testplan
-- Fehler zuerst diagnostizieren, nicht durch Patch-Ketten überdecken
+```qml
+selectRange(..., 0, 0)
+```
 
-Siehe außerdem:
+Diese Auswahl ist laut MuseScore-API ungültig und wurde daher immer mit
+`false` abgewiesen. Damit hatte `time-delete` nie einen gültigen Bereich.
 
-- `CHANGELOG.md`
-- `DEVELOPMENT.md`
-- `API-AUDIT.md`
-- `KNOWN-ISSUES.md`
-- `TESTS.md`
+## Korrektur in v0.5.8
+
+Jetzt wird korrekt verwendet:
+
+```qml
+score.selection.selectRange(startTick, endTick, 0, score.nstaves)
+```
+
+Bei einem System also:
+
+```qml
+selectRange(..., 0, 1)
+```
+
+Damit umfasst die Auswahl tatsächlich das vollständige erste System.
+
+Der gleiche Fehler wurde auch in der zusätzlichen Kürzungsroutine korrigiert.
+
+Sonst wurde an diesem Teil nichts geändert.

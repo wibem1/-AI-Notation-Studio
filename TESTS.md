@@ -62,3 +62,13 @@
 - [ ] Komposition/Analyse und Partitur-Chat sind optisch eindeutig getrennt.
 - [ ] Chat-Modi **Nur besprechen** / **Änderung vorbereiten** funktionieren.
 - [ ] Vorschlag lässt sich bewusst als Kompositionsauftrag übernehmen.
+
+## v0.7.6 – Gedächtnis
+
+- [ ] Allgemeine Vorbelegungen bleiben nach MuseScore-Neustart erhalten.
+- [ ] Zwei unterschiedliche Scores erhalten getrennte Chatverläufe.
+- [ ] Score A lädt nicht den Chat von Score B.
+- [ ] Score-Gedächtnis bleibt nach Speichern, Schließen und erneutem Öffnen erhalten.
+- [ ] Generelles Gedächtnis gilt in beiden Scores.
+- [ ] Score-Gedächtnis lässt sich leeren, ohne das generelle Gedächtnis zu verändern.
+- [ ] Generelles Gedächtnis lässt sich leeren, ohne Score-Gedächtnisse zu verändern.

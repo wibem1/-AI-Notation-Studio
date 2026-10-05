@@ -8,12 +8,12 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.6.0"
+    version: "0.7.0"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
     width: 820
-    height: 720
+    height: 900
 
     property string selectionJson: ""
     property string statusText: "Bereit."
@@ -28,6 +28,19 @@ MuseScore {
     property string updateRemoteVersion: ""
     property string updateSourceText: ""
     property bool updateBusy: false
+    property var communicationLog: []
+    property int totalInputTokens: 0
+    property int totalOutputTokens: 0
+    property string pendingContextMode: ""
+    property int pendingContextBaseTick: 0
+    property int pendingContextMeasures: 0
+    property bool pendingContextUseExistingParts: false
+    property var pendingContextInstruments: []
+    property var chatMessages: []
+    property bool chatExpanded: false
+    property int chatModeIndex: 0
+    property string chatProposedInstruction: ""
+    property int chatContextTurns: 12
 
     Settings {
         id: settings
@@ -40,6 +53,7 @@ MuseScore {
         property string keyAnthropic: ""
         property string keyGoogle: ""
         property int freeCompositionCounter: 0
+        property string chatHistoryJson: "[]"
     }
 
     FileIO {
@@ -346,7 +360,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.6.0",
+                version: "0.7.0",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -1140,12 +1154,431 @@ MuseScore {
         }
     }
 
-    function callAI(prompt, callback) {
+
+    function scoreEndTick(score) {
+        if (!score || !score.lastMeasure) return 0
+        return score.lastMeasure.tick.ticks + score.lastMeasure.ticks.ticks
+    }
+
+    function measureTicks(score) {
+        if (!score || !score.lastMeasure || !score.lastMeasure.ticks) return 1920
+        var t = Number(score.lastMeasure.ticks.ticks)
+        return (!isNaN(t) && t > 0) ? t : 1920
+    }
+
+    function selectionMeasureCount() {
+        var b = selectionBounds()
+        var mt = measureTicks(curScore)
+        if (b.lengthTicks <= 0) return 1
+        return Math.max(1, Math.ceil(b.lengthTicks / mt))
+    }
+
+    function partSummary(score) {
+        if (!score || !score.parts) return []
+        var out = []
+        for (var i = 0; i < score.parts.length; i++) {
+            var p = score.parts[i]
+            out.push({ index: i, instrumentId: String(p.instrumentId || ""), firstStaff: partFirstStaff(p), staves: partStaffCount(p) })
+        }
+        return out
+    }
+
+    function scoreSnapshot() {
+        if (!curScore) return { open: false }
+        return { open: true, title: String(curScore.title || ""), measures: Number(curScore.nmeasures || 0), staves: Number(curScore.nstaves || 0), parts: partSummary(curScore) }
+    }
+
+    function logEvent(kind, message, data) {
+        var arr = communicationLog.slice(0)
+        arr.push({ time: new Date().toISOString(), kind: kind, message: message, data: data || {} })
+        if (arr.length > 200) arr = arr.slice(arr.length - 200)
+        communicationLog = arr
+    }
+
+    function usageFromResponse(provider, r) {
+        var input = 0
+        var output = 0
+        if (provider === "OpenAI" && r && r.usage) {
+            input = Number(r.usage.input_tokens || r.usage.prompt_tokens || 0)
+            output = Number(r.usage.output_tokens || r.usage.completion_tokens || 0)
+        } else if (provider === "Anthropic" && r && r.usage) {
+            input = Number(r.usage.input_tokens || 0)
+            output = Number(r.usage.output_tokens || 0)
+        } else if (provider === "Google" && r && r.usageMetadata) {
+            input = Number(r.usageMetadata.promptTokenCount || 0)
+            output = Number(r.usageMetadata.candidatesTokenCount || 0)
+        }
+        if (isNaN(input)) input = 0
+        if (isNaN(output)) output = 0
+        return { input: input, output: output }
+    }
+
+    function registerUsage(provider, r) {
+        var u = usageFromResponse(provider, r)
+        totalInputTokens += u.input
+        totalOutputTokens += u.output
+        logEvent("KOSTEN", "Tokenverbrauch", { provider: provider, inputTokens: u.input, outputTokens: u.output, totalInputTokens: totalInputTokens, totalOutputTokens: totalOutputTokens, cost: "nicht berechenbar ohne verifizierten Modellpreis" })
+    }
+
+    function communicationLogText() {
+        var out = "KOMMUNIKATIONSPROTOKOLL\n\n"
+        for (var i = 0; i < communicationLog.length; i++) {
+            var e = communicationLog[i]
+            out += "[" + e.time + "] " + e.kind + " · " + e.message + "\n"
+            if (e.data && Object.keys(e.data).length) out += JSON.stringify(e.data, null, 2) + "\n"
+            out += "\n"
+        }
+        out += "Tokens gesamt: Eingabe " + totalInputTokens + ", Ausgabe " + totalOutputTokens + "\n"
+        out += "Kosten: nicht berechenbar ohne verifizierten Modellpreis."
+        return out
+    }
+
+    function diagnosticText() {
+        var sel = null
+        try { sel = selectionJson === "" ? null : JSON.parse(selectionJson) } catch (e) {}
+        return JSON.stringify({
+            pluginVersion: root.version,
+            provider: providerName(),
+            model: modelBox.text.trim(),
+            mode: modeBox.currentText,
+            instruction: instructionBox.text.trim(),
+            score: scoreSnapshot(),
+            selection: sel,
+            musicalDraft: musicalDraft,
+            technicalJson: compositionJson,
+            tokens: { input: totalInputTokens, output: totalOutputTokens },
+            pendingContext: { mode: pendingContextMode, baseTick: pendingContextBaseTick, measures: pendingContextMeasures, useExistingParts: pendingContextUseExistingParts, instruments: pendingContextInstruments },
+            chat: { mode: chatModeIndex === 0 ? "Besprechen" : "Ändern", messages: chatMessages, proposedInstruction: chatProposedInstruction }
+        }, null, 2)
+    }
+
+    function showCommunicationLog() {
+        aiAnswer = communicationLogText()
+        statusText = "Kommunikationsprotokoll angezeigt."
+    }
+
+    function showDiagnostic() {
+        aiAnswer = diagnosticText()
+        statusText = "Diagnose angezeigt."
+    }
+
+    function undoMuseScore() {
+        if (!curScore) { statusText = "Keine Partitur geöffnet."; return }
+        cmd("action://notation/undo")
+        logEvent("MUSESCORE", "Rückgängig ausgeführt", scoreSnapshot())
+        statusText = "Rückgängig."
+    }
+
+    function redoMuseScore() {
+        if (!curScore) { statusText = "Keine Partitur geöffnet."; return }
+        cmd("action://notation/redo")
+        logEvent("MUSESCORE", "Wiederholen ausgeführt", scoreSnapshot())
+        statusText = "Wiederholt."
+    }
+
+    function contextTargetInstruments(mode) {
+        if (mode === 3) {
+            var out = []
+            if (curScore && curScore.parts) {
+                for (var i = 0; i < curScore.parts.length; i++) out.push(String(curScore.parts[i].instrumentId || ("Part " + (i + 1))))
+            }
+            return out
+        }
+        return normalizedInstrumentation()
+    }
+
+    function contextMeasures(mode) {
+        if (mode === 3 || mode === 4) return freeMeasures
+        return selectionMeasureCount()
+    }
+
+    function makeContextCompositionPrompt(mode) {
+        var names = { 3: "FORTSETZEN", 4: "AUS MOTIV ENTWICKELN", 5: "VARIANTE ERZEUGEN", 6: "FÜR ANDERE BESETZUNG BEARBEITEN" }
+        var instruments = contextTargetInstruments(mode)
+        var measures = contextMeasures(mode)
+        var specific = ""
+        if (mode === 3) {
+            specific = "Setze die Musik organisch nach dem Ende der Auswahl fort. Entwickle Motive, Harmonik und Rhythmik weiter, statt die Auswahl bloß zu wiederholen. Die vorhandenen Parts bleiben erhalten und müssen in gleicher Reihenfolge verwendet werden."
+        } else if (mode === 4) {
+            specific = "Behandle die Auswahl als motivischen Keim. Entwickle daraus ein vollständiges Stück. Sequenz, rhythmische Veränderung, Umkehrung, Gegenstimmen und harmonische Neuinterpretation sind erlaubt, das Motiv soll aber erkennbar bleiben."
+        } else if (mode === 5) {
+            specific = "Erzeuge genau EINE musikalisch eigenständige Variante der Auswahl. Bewahre Identität, ungefähre Form und Funktion, ändere aber Melodik, Rhythmik, Stimmführung oder Harmonik sinnvoll. Keine Liste mehrerer Varianten."
+        } else {
+            specific = "Bearbeite die Auswahl idiomatisch für die Zielbesetzung. Bewahre musikalische Identität, Form und wesentliche Stimmen, verteile Register, Rollen und Klangfarben aber instrumentengerecht neu."
+        }
+
+        return "Du komponierst jetzt die endgültige musikalische Fassung für den Modus " + names[mode] + ".\n" +
+               "Dies ist KEIN Vorentwurf und KEIN technischer JSON-Schritt. Komponiere vollständig und konkret ausnotierbar.\n\n" +
+               "AUFTRAG DES NUTZERS:\n" + instructionBox.text.trim() + "\n\n" +
+               "ZIELPARTS/Besetzung: " + instruments.join(", ") + "\n" +
+               "ZIELLÄNGE: " + measures + " Takte.\n\n" +
+               specific + "\n\n" +
+               "Achte auf musikalische Gestalt, Verlauf, Stimmen, Rhythmus, Harmonik, Artikulation, Dynamik und Spielbarkeit. Keine Erläuterung deiner Arbeitsweise.\n\n" +
+               "REFERENZAUSWAHL (MuseScore-JSON):\n" + selectionJson
+    }
+
+    function makeContextRealizationPrompt(draft, mode) {
+        var instruments = contextTargetInstruments(mode)
+        return "Du bist ausschließlich für die TECHNISCHE UMSETZUNG einer bereits fertig komponierten musikalischen Fassung zuständig.\n" +
+               "Nicht neu komponieren, nichts vereinfachen, keine musikalischen Entscheidungen ändern.\n\n" +
+               "ZIELPARTS in dieser Reihenfolge: " + instruments.join(", ") + "\n" +
+               "MuseScore verwendet 480 Ticks pro Viertelnote.\n\n" +
+               "FERTIGE MUSIKALISCHE FASSUNG:\n" + draft + "\n\n" +
+               "Gib exakt dieses JSON-Schema aus:\n" +
+               "{\n" +
+               '  "title": "kurzer Name",\n' +
+               '  "parts": [\n' +
+               '    {"partIndex":1,"notes":[{"offsetTicks":0,"durationNumerator":1,"durationDenominator":4,"pitchMidi":60,"staff":0}]}\n' +
+               "  ]\n" +
+               "}\n\n" +
+               "REGELN:\n" +
+               "- Genau " + instruments.length + " Part-Objekte in der angegebenen Reihenfolge.\n" +
+               "- offsetTicks relativ zum Einfügebeginn.\n" +
+               "- staff ist innerhalb eines Parts 0-basiert; bei Klavier 0 rechte, 1 linke Hand.\n" +
+               "- Pausen als Lücken.\n" +
+               "- Rhythmus und Tonhöhen der fertigen Fassung exakt erhalten.\n" +
+               "- Nur einen JSON-Block ausgeben."
+    }
+
+    function runContextMode(mode) {
+        if (mode === 3) {
+            var b = selectionBounds()
+            if (b.endTick < scoreEndTick(curScore)) {
+                busy = false
+                statusText = "Fortsetzen ist nur sicher, wenn die Auswahl am Partiturende endet."
+                return
+            }
+        }
+
+        var instruments = contextTargetInstruments(mode)
+        if (!instruments || instruments.length === 0) {
+            busy = false
+            statusText = "Keine Zielbesetzung angegeben."
+            return
+        }
+
+        var labels = {3:"Fortsetzen",4:"Motiv entwickeln",5:"Variante",6:"Bearbeitung"}
+        statusText = "1/2: KI komponiert · " + labels[mode] + " …"
+
+        callAI(makeContextCompositionPrompt(mode), function(ok1, draft) {
+            if (!ok1) { busy = false; aiAnswer = draft; statusText = labels[mode] + " fehlgeschlagen."; return }
+            musicalDraft = draft
+            aiAnswer = "MUSIKALISCHE FASSUNG:\n\n" + draft + "\n\n---\n\n2/2: Technische Umsetzung läuft …"
+            statusText = "2/2: Umsetzung für MuseScore …"
+
+            callAI(makeContextRealizationPrompt(draft, mode), function(ok2, technical) {
+                busy = false
+                if (!ok2) {
+                    aiAnswer = "MUSIKALISCHE FASSUNG:\n\n" + draft + "\n\n---\n\nTECHNISCHE UMSETZUNG FEHLGESCHLAGEN:\n" + technical
+                    statusText = "Musik fertig, technische Umsetzung fehlgeschlagen."
+                    return
+                }
+                var candidate = extractJsonBlock(technical)
+                try {
+                    var obj = JSON.parse(candidate)
+                    if (!obj.parts || obj.parts.length !== instruments.length) {
+                        compositionJson = ""
+                        statusText = "Technische Umsetzung hat eine falsche Part-Anzahl."
+                        aiAnswer = technical
+                        return
+                    }
+                    var b2 = selectionBounds()
+                    pendingContextMode = labels[mode]
+                    pendingContextBaseTick = mode === 3 ? b2.endTick : b2.startTick
+                    pendingContextMeasures = contextMeasures(mode)
+                    pendingContextUseExistingParts = mode === 3
+                    pendingContextInstruments = instruments.slice(0)
+                    compositionJson = candidate
+                    aiAnswer = "MUSIKALISCHE FASSUNG:\n\n" + draft + "\n\n---\n\nTECHNISCHE UMSETZUNG:\n\n" + technical
+                    statusText = labels[mode] + " fertig und zum Einfügen bereit."
+                } catch (e) {
+                    compositionJson = ""
+                    aiAnswer = technical
+                    statusText = "Technische JSON-Daten konnten nicht gelesen werden."
+                }
+            }, "KI TECHNIK · " + labels[mode])
+        }, "KI MUSIK · " + labels[mode])
+    }
+
+    function ensureContextCapacity(score, baseTick, measures) {
+        if (!score) return
+        var mt = measureTicks(score)
+        var requiredEnd = baseTick + Math.max(1, measures) * mt
+        var currentEnd = scoreEndTick(score)
+        if (requiredEnd > currentEnd) {
+            var add = Math.ceil((requiredEnd - currentEnd) / mt)
+            if (add > 0) score.appendMeasures(add)
+        }
+    }
+
+    function insertContextComposition() {
+        if (!curScore || compositionJson === "") { statusText = "Keine Kontextkomposition zum Einfügen vorhanden."; return }
+        var cmdStarted = false
+        try {
+            var data = JSON.parse(compositionJson)
+            if (!data.parts || data.parts.length !== pendingContextInstruments.length) { statusText = "Part-Daten passen nicht zur vorbereiteten Komposition."; return }
+
+            curScore.startCmd("AI Notation Studio: " + pendingContextMode)
+            cmdStarted = true
+            ensureContextCapacity(curScore, pendingContextBaseTick, pendingContextMeasures)
+
+            var targetParts = []
+            if (pendingContextUseExistingParts) {
+                if (!curScore.parts || curScore.parts.length !== data.parts.length) throw "Partiturstruktur hat sich seit der Komposition verändert."
+                for (var e = 0; e < curScore.parts.length; e++) targetParts.push(curScore.parts[e])
+            } else {
+                var oldPartCount = curScore.parts ? curScore.parts.length : 0
+                for (var p = 0; p < pendingContextInstruments.length; p++) curScore.appendPart(expectedInstrumentId(pendingContextInstruments[p]))
+                if (!curScore.parts || curScore.parts.length < oldPartCount + pendingContextInstruments.length) throw "MuseScore hat nicht alle Zielparts erzeugt."
+                for (var q = 0; q < pendingContextInstruments.length; q++) {
+                    var created = curScore.parts[oldPartCount + q]
+                    var check = verifyPart(created, pendingContextInstruments[q])
+                    if (check !== "") throw check
+                    targetParts.push(created)
+                }
+            }
+
+            var inserted = 0
+            for (var pi = 0; pi < data.parts.length; pi++) {
+                var notes = data.parts[pi].notes || []
+                var part = targetParts[pi]
+                var baseStaff = partFirstStaff(part)
+                var staffCount = partStaffCount(part)
+                var piano = staffCount > 1
+                for (var ni = 0; ni < notes.length; ni++) {
+                    var n = notes[ni]
+                    if (n.pitchMidi === undefined) continue
+                    var localStaff = Number(n.staff || 0)
+                    if (!piano) localStaff = 0
+                    if (localStaff < 0) localStaff = 0
+                    if (localStaff >= staffCount) localStaff = staffCount - 1
+                    var num = Number(n.durationNumerator || 1)
+                    var den = Number(n.durationDenominator || 4)
+                    if (num <= 0 || den <= 0) continue
+                    var cursor = curScore.newCursor()
+                    cursor.staffIdx = baseStaff + localStaff
+                    cursor.voice = 0
+                    cursor.rewindToTick(pendingContextBaseTick + Number(n.offsetTicks || 0))
+                    cursor.staffIdx = baseStaff + localStaff
+                    cursor.voice = 0
+                    cursor.setDuration(num, den)
+                    cursor.addNote(Number(n.pitchMidi))
+                    inserted++
+                }
+            }
+
+            curScore.endCmd()
+            cmdStarted = false
+            logEvent("MUSESCORE", pendingContextMode + " eingefügt", { insertedNotes: inserted, baseTick: pendingContextBaseTick, measures: pendingContextMeasures, useExistingParts: pendingContextUseExistingParts })
+            statusText = pendingContextMode + " eingefügt: " + inserted + " Noten."
+        } catch (e) {
+            if (cmdStarted) { try { curScore.endCmd(true) } catch (ignore) {} }
+            statusText = "Einfügen fehlgeschlagen: " + e
+        }
+    }
+
+    function loadChatHistory() {
+        try {
+            var a = JSON.parse(settings.chatHistoryJson || "[]")
+            chatMessages = a && a.length !== undefined ? a : []
+        } catch (e) { chatMessages = [] }
+    }
+
+    function saveChatHistory() {
+        try { settings.chatHistoryJson = JSON.stringify(chatMessages) } catch (e) {}
+    }
+
+    function clearChatHistory() {
+        chatMessages = []
+        chatProposedInstruction = ""
+        saveChatHistory()
+    }
+
+    function appendChatMessage(role, text) {
+        var a = chatMessages.slice(0)
+        a.push({ role: role, text: String(text || "") })
+        if (a.length > 50) a = a.slice(a.length - 50)
+        chatMessages = a
+        saveChatHistory()
+    }
+
+    function chatTranscript() {
+        var out = ""
+        for (var i = 0; i < chatMessages.length; i++) out += (chatMessages[i].role === "user" ? "Ich: " : "KI: ") + chatMessages[i].text + "\n\n"
+        return out
+    }
+
+    function readSelectionForChat() {
+        if (!curScore || !curScore.selection || !curScore.selection.elements) return ""
+        var raw = curScore.selection.elements
+        if (!raw || raw.length === 0) return ""
+        var data = { elements: [] }
+        for (var i = 0; i < raw.length; i++) {
+            var e = serializeSelectedElement(raw[i])
+            if (e) data.elements.push(e)
+        }
+        return JSON.stringify(data)
+    }
+
+    function recentChatContext() {
+        var start = Math.max(0, chatMessages.length - chatContextTurns)
+        var out = []
+        for (var i = start; i < chatMessages.length; i++) out.push(chatMessages[i])
+        return out
+    }
+
+    function buildChatPrompt(userMessage, changeMode) {
+        var sel = readSelectionForChat()
+        var rule = changeMode
+            ? "Berate musikalisch konkret. Wenn eine Änderung sinnvoll ist, beende deine Antwort mit genau einer Zeile: BEARBEITUNGSAUFTRAG: <konkreter Auftrag>. Schreibe selbst noch nichts in die Partitur."
+            : "Besprich die Partitur musikalisch. Verändere nichts und gib keine technischen MuseScore-Daten aus."
+        return "Du bist der partiturbezogene Chat in AI Notation Studio.\n" +
+               rule + "\n\n" +
+               "PARTITURSTRUKTUR:\n" + JSON.stringify(scoreSnapshot()) + "\n\n" +
+               (sel !== "" ? "AKTUELLE AUSWAHL:\n" + sel + "\n\n" : "") +
+               "LETZTER CHATKONTEXT:\n" + JSON.stringify(recentChatContext()) + "\n\n" +
+               "NEUE NACHRICHT:\n" + userMessage
+    }
+
+    function extractChatInstruction(text) {
+        var m = String(text || "").match(/BEARBEITUNGSAUFTRAG:\s*([^\n]+)/i)
+        return m && m.length > 1 ? m[1].trim() : ""
+    }
+
+    function sendChatMessage() {
+        if (busy) return
+        var msg = chatInput.text.trim()
+        if (msg === "") return
+        if (apiKeyBox.text.trim() === "") { statusText = "Bitte zuerst einen API-Key eingeben."; return }
+        saveCurrentKey()
+        saveCurrentModel()
+        appendChatMessage("user", msg)
+        chatInput.text = ""
+        busy = true
+        statusText = "Chat-KI arbeitet …"
+        callAI(buildChatPrompt(msg, chatModeIndex === 1), function(ok, text) {
+            busy = false
+            if (!ok) { statusText = "Chat-Aufruf fehlgeschlagen."; return }
+            appendChatMessage("assistant", text)
+            chatProposedInstruction = chatModeIndex === 1 ? extractChatInstruction(text) : ""
+            statusText = "Chat-Antwort erhalten."
+        }, "KI CHAT")
+    }
+
+    function adoptChatInstruction() {
+        if (chatProposedInstruction === "") { statusText = "Kein Bearbeitungsauftrag in der letzten Chat-Antwort gefunden."; return }
+        instructionBox.text = chatProposedInstruction
+        statusText = "Bearbeitungsauftrag in das Auftragsfeld übernommen."
+    }
+
+    function callAI(prompt, callback, stage) {
         var provider = providerName()
         var model = modelBox.text.trim()
         var key = apiKeyBox.text.trim()
         var xhr = new XMLHttpRequest()
         var body = null
+        var stageName = stage || "KI"
+        logEvent("APP", stageName + " Anfrage", { provider: provider, model: model, prompt: prompt })
 
         if (provider === "OpenAI") {
             xhr.open("POST", "https://api.openai.com/v1/responses")
@@ -1175,6 +1608,7 @@ MuseScore {
             if (xhr.readyState !== XMLHttpRequest.DONE) return
 
             if (xhr.status < 200 || xhr.status >= 300) {
+                logEvent("SYSTEM/API", stageName + " Fehler", { provider: provider, model: model, httpStatus: xhr.status, response: xhr.responseText })
                 callback(false, "HTTP " + xhr.status + "\n" + xhr.responseText)
                 return
             }
@@ -1196,6 +1630,8 @@ MuseScore {
                            ? r.candidates[0].content.parts[0].text : ""
                 }
 
+                registerUsage(provider, r)
+                logEvent("KI", stageName + " Antwort", { provider: provider, model: model, text: text || xhr.responseText })
                 callback(true, text || xhr.responseText)
             } catch (e) {
                 callback(false, "Antwort konnte nicht ausgewertet werden.\n" + xhr.responseText)
@@ -1228,6 +1664,8 @@ MuseScore {
         } else {
             selectionJson = ""
         }
+
+        logEvent("NUTZER", "Auftrag", { mode: modeBox.currentText, instruction: instructionBox.text.trim(), instrumentation: freeInstrumentation, measures: freeMeasures })
 
         saveCurrentKey()
         saveCurrentModel()
@@ -1298,6 +1736,11 @@ MuseScore {
             return
         }
 
+        if (mode >= 3) {
+            runContextMode(mode)
+            return
+        }
+
         // Freie Komposition ohne Vorlage
         statusText = "1/2: KI komponiert frei …"
 
@@ -1354,6 +1797,7 @@ MuseScore {
         else providerBox.currentIndex = 0
 
         loadProviderFields()
+        loadChatHistory()
         statusText = "Markiere eine Passage und klicke auf „Auswahl neu lesen“ oder „An KI senden“."
     }
 
@@ -1367,7 +1811,7 @@ MuseScore {
             spacing: 10
 
             Label {
-                text: "AI Notation Studio · v0.6.0"
+                text: "AI Notation Studio · v0.7.0"
                 color: "white"
                 font.pixelSize: 28
                 font.bold: true
@@ -1398,6 +1842,24 @@ MuseScore {
                     color: "#d7d7d7"
                     font.pixelSize: 14
                     wrapMode: Text.WordWrap
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Button { text: "Rückgängig"; font.pixelSize: 14; onClicked: undoMuseScore() }
+                Button { text: "Wiederholen"; font.pixelSize: 14; onClicked: redoMuseScore() }
+                Button { text: "Protokoll"; font.pixelSize: 14; onClicked: showCommunicationLog() }
+                Button { text: "Diagnose"; font.pixelSize: 14; onClicked: showDiagnostic() }
+
+                Label {
+                    Layout.fillWidth: true
+                    text: "Tokens: " + totalInputTokens + " ein · " + totalOutputTokens + " aus · Kosten: nicht berechenbar"
+                    color: "#aaaaaa"
+                    font.pixelSize: 13
+                    horizontalAlignment: Text.AlignRight
                 }
             }
 
@@ -1465,7 +1927,7 @@ MuseScore {
                 ComboBox {
                     id: modeBox
                     Layout.fillWidth: true
-                    model: ["Auswahl analysieren", "Neue Stimme zu Auswahl", "Freie Komposition ohne Vorlage"]
+                    model: ["Auswahl analysieren", "Neue Stimme zu Auswahl", "Freie Komposition ohne Vorlage", "Fortsetzen", "Aus Motiv entwickeln", "Variante erzeugen", "Für andere Besetzung bearbeiten"]
                     currentIndex: 0
                     font.pixelSize: uiSize
                 }
@@ -1474,11 +1936,11 @@ MuseScore {
                     text: "Besetzung"
                     color: "white"
                     font.pixelSize: uiSize
-                    visible: modeBox.currentIndex === 2
+                    visible: modeBox.currentIndex === 2 || modeBox.currentIndex >= 4
                 }
 
                 TextField {
-                    visible: modeBox.currentIndex === 2
+                    visible: modeBox.currentIndex === 2 || modeBox.currentIndex >= 4
                     Layout.fillWidth: true
                     text: freeInstrumentation
                     font.pixelSize: uiSize
@@ -1490,11 +1952,11 @@ MuseScore {
                     text: "Takte"
                     color: "white"
                     font.pixelSize: uiSize
-                    visible: modeBox.currentIndex === 2
+                    visible: modeBox.currentIndex === 2 || modeBox.currentIndex === 3 || modeBox.currentIndex === 4
                 }
 
                 SpinBox {
-                    visible: modeBox.currentIndex === 2
+                    visible: modeBox.currentIndex === 2 || modeBox.currentIndex === 3 || modeBox.currentIndex === 4
                     from: 1
                     to: 128
                     value: freeMeasures
@@ -1588,13 +2050,87 @@ MuseScore {
             Button {
                 text: modeBox.currentIndex === 2
                       ? "Freie Komposition in Partitur einfügen"
-                      : "KI-Komposition als neue Spur einfügen"
+                      : (modeBox.currentIndex >= 3
+                         ? pendingContextMode + " in Partitur einfügen"
+                         : "KI-Komposition als neue Spur einfügen")
                 visible: compositionJson !== ""
                 enabled: compositionJson !== ""
                 font.pixelSize: uiSize
                 onClicked: {
                     if (modeBox.currentIndex === 2) insertFreeComposition()
+                    else if (modeBox.currentIndex >= 3) insertContextComposition()
                     else insertCompositionAsNewPart()
+                }
+            }
+
+            Button {
+                text: chatExpanded ? "Chat ausblenden" : "Partitur-Chat"
+                font.pixelSize: 14
+                onClicked: chatExpanded = !chatExpanded
+            }
+
+            Rectangle {
+                visible: chatExpanded
+                Layout.fillWidth: true
+                Layout.preferredHeight: 300
+                color: "#292a2d"
+                radius: 4
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 6
+
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        ComboBox {
+                            id: chatModeBox
+                            model: ["Besprechen", "Ändern"]
+                            currentIndex: chatModeIndex
+                            onCurrentIndexChanged: chatModeIndex = currentIndex
+                            font.pixelSize: 14
+                        }
+
+                        Button { text: "Neuer Chat"; font.pixelSize: 14; onClicked: clearChatHistory() }
+
+                        Button {
+                            text: "Bearbeitungsauftrag übernehmen"
+                            visible: chatProposedInstruction !== ""
+                            font.pixelSize: 14
+                            onClicked: adoptChatInstruction()
+                        }
+                    }
+
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+
+                        TextArea {
+                            id: chatHistoryBox
+                            width: parent.width
+                            readOnly: true
+                            text: chatTranscript()
+                            wrapMode: TextEdit.Wrap
+                            selectByMouse: true
+                            font.pixelSize: 14
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        TextField {
+                            id: chatInput
+                            Layout.fillWidth: true
+                            placeholderText: "Frage zur Partitur oder zur markierten Passage …"
+                            font.pixelSize: 14
+                            onAccepted: sendChatMessage()
+                        }
+
+                        Button { text: busy ? "…" : "Senden"; enabled: !busy; font.pixelSize: 14; onClicked: sendChatMessage() }
+                    }
                 }
             }
 
@@ -1603,7 +2139,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.6.0 ergänzt eine integrierte GitHub-Updatefunktion. Es gibt nur einen Updateweg: die aktuelle Version auf GitHub/main. Die neue QML-Datei wird geprüft und im Plugin-Ordner ersetzt. Aktiv wird sie nach einem MuseScore-Neustart."
+                text: "v0.7.0: Fortsetzen, Motiv entwickeln, eine Variante erzeugen, andere Besetzung, Partitur-Chat, MuseScore-Undo/Redo, Kommunikationsprotokoll, Diagnose und Tokenkontrolle. MuseScore-Schreibzugriffe verwenden auditierte API-v1-Funktionen bzw. im 4.7-Quellcode verifizierte Action-Codes."
             }
         }
     }

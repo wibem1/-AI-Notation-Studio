@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.7"
+    version: "0.7.8"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -577,7 +577,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.7",
+                version: "0.7.8",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -2120,7 +2120,7 @@ MuseScore {
                 selectByMouse: true
                 font.pixelSize: 15
                 text:
-                    "AI Notation Studio v0.7.7\n\n" +
+                    "AI Notation Studio v0.7.8\n\n" +
                     "KOMPOSITION / ANALYSE\n" +
                     "Dieser Bereich führt den eigentlichen musikalischen Auftrag aus. Der gewählte Modus bestimmt, ob analysiert, eine neue Stimme komponiert, frei komponiert, fortgesetzt, ein Motiv entwickelt, eine Variante erzeugt oder neu instrumentiert wird.\n\n" +
                     "PARTITUR-CHAT\n" +
@@ -2129,6 +2129,8 @@ MuseScore {
                     "Bei Kompositionsaufgaben entsteht zuerst die fertige musikalische Fassung. Erst danach folgt die technische Umsetzung für MuseScore. Es gibt keine Vorentwurfsphase.\n\n" +
                     "RÜCKGÄNGIG / WIEDERHOLEN\n" +
                     "Verwendet MuseScores eigene Undo-Historie.\n\n" +
+                    "TECHNISCHES\n" +
+                    "Provider, Modell und API-Key stehen gesammelt im unteren Bereich „Technisches“, damit der musikalische Arbeitsbereich übersichtlich bleibt.\n\n" +
                     "PROTOKOLL / DIAGNOSE\n" +
                     "Zeigt die Kommunikation, technische Daten und Tokenwerte. API-Keys werden nicht in die Diagnose übernommen.\n\n" +
                     "GEDÄCHTNIS\n" +
@@ -2152,7 +2154,7 @@ MuseScore {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "AI Notation Studio · v0.7.7"
+                    text: "AI Notation Studio · v0.7.8"
                     color: "white"
                     font.pixelSize: 28
                     font.bold: true
@@ -2250,56 +2252,6 @@ MuseScore {
                 }
             }
 
-            GridLayout {
-                Layout.fillWidth: true
-                columns: 2
-                columnSpacing: 12
-                rowSpacing: 8
-
-                Label {
-                    text: "Anbieter"
-                    color: "white"
-                    font.pixelSize: uiSize
-                }
-
-                ComboBox {
-                    id: providerBox
-                    Layout.fillWidth: true
-                    model: ["OpenAI", "Anthropic", "Google"]
-                    font.pixelSize: uiSize
-                    onCurrentIndexChanged: {
-                        loadProviderFields()
-                    }
-                }
-
-                Label {
-                    text: "Modell"
-                    color: "white"
-                    font.pixelSize: uiSize
-                }
-
-                TextField {
-                    id: modelBox
-                    Layout.fillWidth: true
-                    font.pixelSize: uiSize
-                    onEditingFinished: saveCurrentModel()
-                }
-
-                Label {
-                    text: "API-Key"
-                    color: "white"
-                    font.pixelSize: uiSize
-                }
-
-                TextField {
-                    id: apiKeyBox
-                    Layout.fillWidth: true
-                    echoMode: TextInput.Password
-                    font.pixelSize: uiSize
-                    placeholderText: "wird lokal gespeichert"
-                    onEditingFinished: saveCurrentKey()
-                }
-            }
 
             GridLayout {
                 Layout.fillWidth: true
@@ -2581,12 +2533,89 @@ MuseScore {
                 }
             }
 
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 52
+                color: "#2b2d31"
+                radius: 5
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 10
+
+                    Label {
+                        text: "TECHNISCHES"
+                        color: "white"
+                        font.pixelSize: 18
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        text: "Provider, Modell und API-Key"
+                        color: "#c9c9c9"
+                        font.pixelSize: 13
+                    }
+                }
+            }
+
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 2
+                columnSpacing: 12
+                rowSpacing: 8
+
+                Label {
+                    text: "Anbieter"
+                    color: "white"
+                    font.pixelSize: uiSize
+                }
+
+                ComboBox {
+                    id: providerBox
+                    Layout.fillWidth: true
+                    model: ["OpenAI", "Anthropic", "Google"]
+                    font.pixelSize: uiSize
+                    onCurrentIndexChanged: {
+                        loadProviderFields()
+                    }
+                }
+
+                Label {
+                    text: "Modell"
+                    color: "white"
+                    font.pixelSize: uiSize
+                }
+
+                TextField {
+                    id: modelBox
+                    Layout.fillWidth: true
+                    font.pixelSize: uiSize
+                    onEditingFinished: saveCurrentModel()
+                }
+
+                Label {
+                    text: "API-Key"
+                    color: "white"
+                    font.pixelSize: uiSize
+                }
+
+                TextField {
+                    id: apiKeyBox
+                    Layout.fillWidth: true
+                    echoMode: TextInput.Password
+                    font.pixelSize: uiSize
+                    placeholderText: "wird lokal gespeichert"
+                    onEditingFinished: saveCurrentKey()
+                }
+            }
+
             Label {
                 Layout.fillWidth: true
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.7: Updater adressiert die aktuell laufende QML-Datei jetzt über Qt.resolvedUrl() relativ zum Plugin selbst. Dadurch ist kein neuer FileIO-Pfadaufruf erforderlich; ältere MuseScore-4.x-Versionen werden unterstützt."
+                text: "v0.7.8: Provider, Modell und API-Key wurden aus dem musikalischen Arbeitsbereich herausgenommen und unten in der eigenen Rubrik „Technisches“ zusammengefasst. Diese Version dient zugleich als Updater-Test von v0.7.7."
             }
         }
     }

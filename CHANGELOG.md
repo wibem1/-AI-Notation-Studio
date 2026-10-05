@@ -1,28 +1,26 @@
 # Changelog
 
-## 0.5.9 — Release Candidate
+## 0.6.0 — Release Candidate
 
-Stabilisierung nach vollständigem MuseScore-4.7-API-Audit. Keine neuen Funktionen.
+- Integrierte GitHub-Updatefunktion ergänzt.
+- Zwei Updatekanäle:
+  - Stable → `main`
+  - Testversion → `develop`
+- Remote-QML wird per HTTPS geladen.
+- Versionsnummer wird aus der heruntergeladenen QML-Datei gelesen und verglichen.
+- Update wird nur angeboten, wenn die Remote-Version neuer ist.
+- Vor Installation wird geprüft, ob die Datei plausibel eine AI-Notation-Studio-QML ist.
+- Zielpfad wird mit `FileIO.pluginDirectoryPath()` bestimmt.
+- Schreiben erfolgt nur, wenn `FileIO.isPathWriteable(...)` dies erlaubt.
+- Neue Version wird nach Neustart von MuseScore aktiv.
 
-- Fehler behoben: `makeCompositionPrompt()` verwendete die undefinierte Variable `userText`.
-- Schutz ergänzt: freie Komposition löscht vorhandene Noten nicht mehr. Vor `time-delete` wird die Vollbereichsauswahl auf Note-/Chord-Elemente geprüft.
-- Titelbehandlung geändert: `addText("title", ...)` entfernt; stattdessen `setMetaTag("workTitle", ...)`.
-- Transaktionsbehandlung abgesichert: `cmdStarted` verhindert `endCmd(true)` ohne vorheriges `startCmd()`.
-- Keine neuen Modi oder Funktionen.
+## 0.5.9 — Stabilisierung
 
-Status: **noch nicht praktisch freigegeben**.
+- undefiniertes `userText` behoben
+- vorhandene Noten vor destruktivem Taktlöschen geschützt
+- `addText("title", ...)` durch `setMetaTag("workTitle", ...)` ersetzt
+- `startCmd/endCmd` mit `cmdStarted` abgesichert
 
 ## 0.5.8 — Baseline
 
-- Auswahl wird über `curScore.selection.elements` gelesen.
-- Analyse einer markierten Passage.
-- Komposition einer neuen Stimme zu einer markierten Passage.
-- Freie Komposition ohne Vorlage.
-- Zwei-Stufen-Verfahren: musikalische Komposition → technische Umsetzung für MuseScore.
-- Provider: OpenAI, Anthropic, Google.
-- Instrumente: Violine, Viola, Cello, Kontrabass, Klavier.
-- Korrektur von `selection.selectRange(...)`: `endStaff` ist exklusiv; daher wird `curScore.nstaves` verwendet.
-
-## Frühere Stände
-
-Frühere Versionen entstanden vor Einrichtung dieses Git-Repositories und sind nicht vollständig als Git-Historie vorhanden.
+Erster belastbarer Git-Ausgangspunkt.

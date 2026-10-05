@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.9"
+    version: "0.7.10"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -45,6 +45,8 @@ MuseScore {
     property string scoreMemoryNotes: ""
     property bool restoringMemory: false
     property bool technicalExpanded: false
+    property bool hotAppActive: false
+    property string hotAppVersion: ""
     property bool infoOpen: false
 
     Settings {
@@ -68,6 +70,8 @@ MuseScore {
         property int defaultChatModeIndex: 0
         property bool defaultChatExpanded: false
         property bool defaultTechnicalExpanded: false
+        property string activeHotAppSource: ""
+        property string activeHotAppVersion: ""
     }
 
     FileIO {
@@ -271,6 +275,39 @@ MuseScore {
         }
     }
 
+
+    function siblingPluginUrl(fileName) {
+        var current = resolvedCurrentPluginSource()
+        if (!current || current === "") return ""
+        var slash = current.lastIndexOf("/")
+        if (slash < 0) return ""
+        return current.substring(0, slash + 1) + fileName
+    }
+
+    function activateHotApp(sourceUrl, versionText) {
+        if (!sourceUrl || sourceUrl === "") {
+            updateStatus = "Live-Aktivierung fehlgeschlagen: App-Datei fehlt."
+            return false
+        }
+
+        settings.activeHotAppSource = sourceUrl
+        settings.activeHotAppVersion = versionText || ""
+        hotAppVersion = versionText || ""
+        hotAppActive = true
+
+        // Andere URL => neue QML-Komponente statt MuseScores gecachter Plugin-Komponente.
+        hotAppLoader.source = ""
+        hotAppLoader.source = sourceUrl
+        return true
+    }
+
+    function clearHotAppActivation() {
+        settings.activeHotAppSource = ""
+        settings.activeHotAppVersion = ""
+        hotAppVersion = ""
+        hotAppActive = false
+        hotAppLoader.source = ""
+    }
 
     function scoreMemoryTagName() {
         return "AI-Notation-Studio-Memory-v1"
@@ -581,7 +618,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.9",
+                version: "0.7.10",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -1973,6 +2010,11 @@ MuseScore {
     }
 
     onRun: {
+        if (settings.activeHotAppSource && settings.activeHotAppSource !== "") {
+            if (activateHotApp(settings.activeHotAppSource, settings.activeHotAppVersion))
+                return
+        }
+
         if (settings.provider === "Anthropic") providerBox.currentIndex = 1
         else if (settings.provider === "Google") providerBox.currentIndex = 2
         else providerBox.currentIndex = 0
@@ -2124,7 +2166,7 @@ MuseScore {
                 selectByMouse: true
                 font.pixelSize: 15
                 text:
-                    "AI Notation Studio v0.7.9\n\n" +
+                    "AI Notation Studio v0.7.10\n\n" +
                     "KOMPOSITION / ANALYSE\n" +
                     "Dieser Bereich führt den eigentlichen musikalischen Auftrag aus. Der gewählte Modus bestimmt, ob analysiert, eine neue Stimme komponiert, frei komponiert, fortgesetzt, ein Motiv entwickelt, eine Variante erzeugt oder neu instrumentiert wird.\n\n" +
                     "PARTITUR-CHAT\n" +
@@ -2140,13 +2182,15 @@ MuseScore {
                     "GEDÄCHTNIS\n" +
                     "Es gibt zwei getrennte Ebenen. Das generelle Gedächtnis enthält allgemeine Arbeitsvorlieben und Vorbelegungen der Felder. Das Score-Gedächtnis gehört ausschließlich zum geöffneten Score und enthält Chat, letzten Auftrag und Arbeitsstände.\n\n" +
                     "UPDATE\n" +
-                    "„Update prüfen“ sucht die aktuelle Version auf GitHub. „Update installieren“ ersetzt die Plugin-Datei; danach MuseScore neu starten."
+                    "v0.7.10 ist die Übergangsversion für Live-Updates. Künftige App-Versionen werden als eigene QML-Dateien geladen, damit MuseScores QML-Cache keinen Neustart mehr erzwingt."
             }
         }
     }
 
     Rectangle {
+        id: legacyUi
         anchors.fill: parent
+        visible: !hotAppActive
         color: "#202124"
 
         ColumnLayout {
@@ -2158,7 +2202,7 @@ MuseScore {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "AI Notation Studio · v0.7.9"
+                    text: "AI Notation Studio · v0.7.10"
                     color: "white"
                     font.pixelSize: 28
                     font.bold: true
@@ -2630,7 +2674,26 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.9: Der Bereich „Technisches“ ist jetzt einklappbar. Der Zustand wird als allgemeine Bedienpräferenz gespeichert und beim nächsten Start wiederhergestellt."
+                text: "v0.7.10: Übergangsversion für die neue Loader-Architektur. Sie kann künftig eine versionierte App-Datei live laden und deren aktive Version für den nächsten Start speichern."
+            }
+        }
+    }
+
+    Loader {
+        id: hotAppLoader
+        anchors.fill: parent
+        visible: hotAppActive
+        active: hotAppActive
+
+        onLoaded: {
+            if (item && typeof item.bootstrapRun === "function")
+                item.bootstrapRun()
+        }
+
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                hotAppActive = false
+                updateStatus = "Live-App konnte nicht geladen werden. Die bisherige Oberfläche bleibt aktiv."
             }
         }
     }

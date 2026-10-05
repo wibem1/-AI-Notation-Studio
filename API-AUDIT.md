@@ -1,100 +1,54 @@
-# API-Audit – AI Notation Studio 0.8.0 RC
+# API-Audit – AI Notation Studio v0.5.8
 
-Zielplattform: MuseScore Studio 4.7.x  
-Extension-API: `apiversion: 2`
+Dieser Audit bezieht sich ausschließlich auf den tatsächlich hochgeladenen Quellcode `AI-Notation-Studio.qml`.
 
-## Einstufung
+## Aktuelle Plugin-Architektur
 
-- **A** = öffentlich dokumentierte MuseScore-API / offizielle 4.7-Extension-Struktur
-- **B** = in der offiziellen API2-Brücke bzw. im aktuellen MuseScore-4.7-Quellcode verifiziert
-- **C** = intern, ungeeignet oder nicht verifiziert; soll nicht verwendet werden
+v0.5.8 verwendet die klassische QML-Plugin-Schnittstelle:
 
-## A
+- `import MuseScore 3.0`
+- `MuseScore { ... }`
+- `menuPath`
+- `requiresScore`
+- `pluginType: "dialog"`
+- `curScore`
 
-### Extension
+Die neuere MuseScore-4.7-Extension-Architektur mit `manifest.json`, `ExtensionBlank` und `MuseApi.*` ist **nicht** Bestandteil von v0.5.8.
 
-- `manifest.json`
-- `"type": "form"`
-- `"apiversion": 2`
-- `ExtensionBlank`
-- `MuseApi.Engraving`
-- `MuseApi.Interactive`
-- `MuseApi.Controls`
+## Im aktuellen Code verwendete zentrale MuseScore-Zugriffe
 
-### Score / Partitur
-
-- `api.engraving.curScore`
-- `score.parts`
-- `score.nmeasures`
-- `score.nstaves`
-- `score.firstMeasure`
-- `score.lastMeasure`
-- `score.newCursor()`
-- `score.appendMeasures(n)`
-- `score.appendPart(instrumentId)`
-- `score.appendPartByMusicXmlId(id)`
-- `score.startCmd(...)`
-- `score.endCmd(rollback)`
-- `score.metaTag(...)`
-- `score.setMetaTag(...)`
-
-### Selection
-
+- `curScore.selection`
 - `selection.elements`
 - `selection.isRange`
-- `selection.startSegment`
-- `selection.endSegment`
-- `selection.startStaff`
-- `selection.endStaff`
 - `selection.clear()`
 - `selection.selectRange(...)`
+- `curScore.newCursor()`
+- `curScore.appendPart(...)`
+- `curScore.appendMeasures(...)`
+- `curScore.startCmd()`
+- `curScore.endCmd()`
+- Cursor-Zugriffe auf Staff, Voice, Tick, Duration und Note
+- `cmd("time-delete")`
 
-`endTick` und `endStaff` sind exklusiv.
+## Verifizierte Besonderheit
 
-### Cursor
+`selection.selectRange(startTick, endTick, startStaff, endStaff)` behandelt `endStaff` exklusiv.
 
-- `cursor.staffIdx`
-- `cursor.voice`
-- `cursor.rewind(...)`
-- `cursor.rewindToTick(tick)`
-- `cursor.setDuration(num, den)`
-- `cursor.addNote(pitch)`
-- `cursor.add(element)`
+Daher ist für alle Systeme korrekt:
 
-### Parts
+```qml
+selection.selectRange(startTick, endTick, 0, curScore.nstaves)
+```
 
-- `part.startTrack`
-- `part.endTrack`
-- `part.instrumentId`
+## Noch zu auditieren
 
-## B
+Vor weiteren größeren Umbauten müssen die folgenden im v0.5.8-Code verwendeten Stellen vollständig gegen die aktuelle MuseScore-4.7-Dokumentation bzw. den Quellcode geprüft werden:
 
-Bewusst isoliert:
+- `cmd("time-delete")`
+- `appendPart(...)` und verwendete Instrument-IDs
+- `startCmd()/endCmd()`
+- Cursor-Schreiboperationen
+- Verhalten beim Löschen überschüssiger Takte
+- Verhalten beim Erzeugen von Klavierparts mit zwei Systemen
 
-- `api.engraving.newElement(...)`
-- `api.engraving.cmd(...)`
-- `api.engraving.mscoreMajorVersion`
-- `api.engraving.mscoreMinorVersion`
-- `api.engraving.mscoreUpdateVersion`
-
-Verifizierte Action-Codes:
-
-- `time-delete`
-- `action://notation/undo`
-- `action://notation/redo`
-
-## C
-
-In der aktuellen Architektur bewusst nicht vorgesehen:
-
-- automatisches Öffnen mit `newScore()`
-- `pluginType: "dialog"`
-- Legacy-Root `MuseScore { ... }`
-- `menuPath` / `requiresScore`
-- `addText("title", ...)` zum Ersetzen eines Titels
-- unbekannte oder geratene Action-Codes
-- separate Schatten-Undo-Historie
-
-## Chat
-
-Der Chat führt keine neue MuseScore-Schreib-API ein. Er liest nur die bereits auditierten Score- und Selection-Daten. Im Modus **Ändern** wird zunächst ausschließlich ein Textauftrag erzeugt.
+Bis dieser Audit abgeschlossen ist, werden diese Punkte nicht als vollständig abgesichert bezeichnet.

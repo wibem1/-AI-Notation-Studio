@@ -81,3 +81,10 @@
 - [ ] Provider, Modell und API-Key stehen unten unter **Technisches**.
 - [ ] Der obere Bereich **Komposition / Analyse** enthält keine Provider-/Key-Felder mehr.
 - [ ] Gespeicherte Provider-, Modell- und Key-Werte bleiben erhalten.
+
+## v0.7.9 – Technisches einklappbar
+
+- [ ] **Technisches** lässt sich auf- und zuklappen.
+- [ ] Provider, Modell und API-Key sind im eingeklappten Zustand verborgen.
+- [ ] Der letzte Auf-/Zuklapp-Zustand bleibt nach Plugin-Neustart erhalten.
+- [ ] Update von v0.7.8 auf v0.7.9 funktioniert ohne Terminal-Schritt.

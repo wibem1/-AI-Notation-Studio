@@ -19,3 +19,7 @@ Stand: **v0.7.0**
 - Undo/Redo nach größeren Einfügeaktionen
 - Chat-Persistenz nach MuseScore-Neustart
 - Tokenfelder der tatsächlich verwendeten Modelle
+
+## v0.7.2
+
+Die bisher unzuverlässige Vorab-Verkürzung leerer Ausgangspartituren wurde entfernt. Offen ist nur noch der Praxistest, ob `del-empty-measures` auf dem Zielsystem die nach der Komposition verbliebenen leeren Endtakte korrekt entfernt.

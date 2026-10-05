@@ -46,3 +46,12 @@ Erster belastbarer Git-Baseline-Stand.
 - Freie Komposition wird zuerst vollständig eingefügt.
 - Danach wird ausschließlich MuseScores eigene Aktion `del-empty-measures` verwendet.
 - Resultierende Taktzahl wird geprüft und im Kommunikationsprotokoll festgehalten.
+
+## 0.7.4
+
+- Layout klar in **Komposition / Analyse** und **Partitur-Chat** getrennt.
+- Hauptbutton heißt jetzt **Auftrag ausführen**.
+- Chat-Modi klarer benannt: **Nur besprechen** und **Änderung vorbereiten**.
+- Chat erklärt ausdrücklich, dass er nicht automatisch in die Partitur schreibt.
+- Neuer **Info**-Button mit Erklärung der Arbeitsbereiche, des Zwei-Stufen-Prinzips, Undo/Redo, Diagnose und Update.
+- Diese Version dient zugleich als kontrollierter Test des eingebauten Updaters.

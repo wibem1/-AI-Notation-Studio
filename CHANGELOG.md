@@ -71,3 +71,9 @@ Erster belastbarer Git-Baseline-Stand.
 - Neuer eigener Bereich **Technisches** am unteren Rand der Oberfläche.
 - Der Bereich **Komposition / Analyse** enthält jetzt nur noch musikalisch relevante Bedienelemente.
 - Version 0.7.8 dient zugleich als kontrollierter Updater-Test von v0.7.7.
+
+## 0.7.9
+
+- Bereich **Technisches** ist jetzt einklappbar.
+- Der Auf-/Zuklapp-Zustand wird als generelle Bedienpräferenz gespeichert.
+- Beim nächsten Start wird der zuletzt verwendete Zustand wiederhergestellt.

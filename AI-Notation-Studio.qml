@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.0"
+    version: "0.7.1"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -28,6 +28,7 @@ MuseScore {
     property string updateRemoteVersion: ""
     property string updateSourceText: ""
     property bool updateBusy: false
+    property string updaterTargetPath: ""
     property var communicationLog: []
     property int totalInputTokens: 0
     property int totalOutputTokens: 0
@@ -156,28 +157,51 @@ MuseScore {
             return
         }
 
-        var dir = updaterFile.pluginDirectoryPath()
-        if (!dir || dir === "") {
-            updateStatus = "Plugin-Ordner konnte nicht ermittelt werden."
-            return
-        }
+        updateStatus = "Installiere v" + updateRemoteVersion + " …"
 
-        var target = dir + "/AI-Notation-Studio.qml"
-        if (!updaterFile.isPathWriteable(target)) {
-            updateStatus = "Plugin-Datei ist für MuseScore nicht schreibbar: " + target
-            return
-        }
+        try {
+            var dir = updaterFile.pluginDirectoryPath()
+            if (!dir || dir === "") {
+                updateStatus = "Update fehlgeschlagen: Plugin-Ordner konnte nicht ermittelt werden."
+                return
+            }
 
-        updaterFile.source = target
-        var ok = updaterFile.write(updateSourceText)
-        if (!ok) {
-            updateStatus = "Update konnte nicht geschrieben werden."
-            return
-        }
+            var target = dir + "/AI-Notation-Studio.qml"
+            updaterTargetPath = target
 
-        updateStatus = "v" + updateRemoteVersion +
-                       " installiert. MuseScore neu starten, damit die neue Version aktiv wird."
-        updateSourceText = ""
+            var writable = updaterFile.isPathWriteable(target)
+            if (!writable) {
+                updateStatus = "Update fehlgeschlagen: MuseScore darf diese Datei nicht schreiben. Pfad: " + target
+                return
+            }
+
+            updaterFile.source = target
+
+            var ok = updaterFile.write(updateSourceText)
+            if (!ok) {
+                updateStatus = "Update fehlgeschlagen: Datei konnte nicht geschrieben werden. Pfad: " + target
+                return
+            }
+
+            if (!updaterFile.exists()) {
+                updateStatus = "Update fehlgeschlagen: Zieldatei ist nach dem Schreiben nicht vorhanden."
+                return
+            }
+
+            var verifyText = updaterFile.read()
+            var verifyVersion = extractPluginVersion(verifyText)
+            if (verifyVersion !== updateRemoteVersion) {
+                updateStatus = "Update fehlgeschlagen: Nachkontrolle meldet v" + verifyVersion +
+                               " statt v" + updateRemoteVersion + "."
+                return
+            }
+
+            updateStatus = "v" + updateRemoteVersion +
+                           " installiert und geprüft. MuseScore jetzt neu starten."
+            updateSourceText = ""
+        } catch (e) {
+            updateStatus = "Update-Fehler: " + e
+        }
     }
 
     function providerName() {
@@ -360,7 +384,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.0",
+                version: "0.7.1",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -1819,7 +1843,7 @@ MuseScore {
             spacing: 10
 
             Label {
-                text: "AI Notation Studio · v0.7.0"
+                text: "AI Notation Studio · v0.7.1"
                 color: "white"
                 font.pixelSize: 28
                 font.bold: true
@@ -2147,7 +2171,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.0: Fortsetzen, Motiv entwickeln, eine Variante erzeugen, andere Besetzung, Partitur-Chat, MuseScore-Undo/Redo, Kommunikationsprotokoll, Diagnose und Tokenkontrolle. MuseScore-Schreibzugriffe verwenden auditierte API-v1-Funktionen bzw. im 4.7-Quellcode verifizierte Action-Codes."
+                text: "v0.7.1: Updateinstallation mit sichtbarer Fehlerdiagnose und Nachkontrolle der geschriebenen Plugin-Datei. Alle Funktionen aus v0.7.0 bleiben erhalten."
             }
         }
     }

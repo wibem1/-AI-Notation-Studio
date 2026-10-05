@@ -51,3 +51,12 @@ Die Oberfläche trennt jetzt bewusst zwei Arbeitsbereiche:
 - **Partitur-Chat**: Gespräch über die Partitur; Änderungen werden nur vorbereitet und erst nach bewusster Übernahme zum Kompositionsauftrag.
 
 Ein neuer **Info**-Button erklärt die Arbeitsweise direkt im Plugin.
+
+## Gedächtnis ab v0.7.6
+
+AI Notation Studio trennt jetzt zwei Ebenen:
+
+- **Generelles Gedächtnis**: allgemeine Regeln, Arbeitsvorlieben und Vorbelegungen der Eingabe- und Auswahlfelder.
+- **Score-Gedächtnis**: nur Informationen zum geöffneten Score, darunter Chat, letzter Auftrag und musikalische Arbeitsstände.
+
+Das Score-Gedächtnis wird als MuseScore-Metadatum im jeweiligen Score gespeichert. Dadurch bleiben verschiedene Scores voneinander getrennt.

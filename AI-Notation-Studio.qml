@@ -28,6 +28,7 @@ MuseScore {
     property string updateRemoteVersion: ""
     property string updateSourceText: ""
     property bool updateBusy: false
+    property bool updateIsHotApp: false
     property string updaterTargetPath: ""
     property var communicationLog: []
     property int totalInputTokens: 0
@@ -82,6 +83,8 @@ MuseScore {
     }
 
     function currentVersionString() {
+        if (hotAppActive && hotAppVersion !== "")
+            return hotAppVersion
         return root.version
     }
 
@@ -110,6 +113,11 @@ MuseScore {
                new Date().getTime()
     }
 
+    function updateHotAppUrl() {
+        return "https://raw.githubusercontent.com/wibem1/AI-Notation-Studio/main/AI-Notation-Studio-App.qml?ts=" +
+               new Date().getTime()
+    }
+
     function extractPluginVersion(text) {
         var m = String(text || "").match(/version\s*:\s*"([0-9]+\.[0-9]+\.[0-9]+)"/)
         return m && m.length > 1 ? m[1] : ""
@@ -123,19 +131,36 @@ MuseScore {
         return extractPluginVersion(text) !== ""
     }
 
-    function checkForUpdate() {
-        if (updateBusy) return
-        updateBusy = true
-        updateRemoteVersion = ""
-        updateSourceText = ""
-        updateStatus = "Prüfe auf Update …"
+    function acceptFetchedUpdate(source, isHotApp) {
+        if (!validateUpdateSource(source)) {
+            updateStatus = "Update abgebrochen: GitHub-Datei ist keine gültige AI-Notation-Studio-Version."
+            return
+        }
 
+        var remote = extractPluginVersion(source)
+        updateRemoteVersion = remote
+        updateIsHotApp = isHotApp
+
+        var cmp = compareVersions(currentVersionString(), remote)
+        if (cmp < 0) {
+            updateSourceText = source
+            updateStatus = "Neue Version verfügbar: lokal v" + currentVersionString() +
+                           " → GitHub v" + remote + (isHotApp ? " · Live-Update" : "")
+        } else if (cmp === 0) {
+            updateStatus = "Aktuell: lokal v" + currentVersionString() + " · GitHub v" + remote
+        } else {
+            updateStatus = "Installiert v" + currentVersionString() + " ist neuer als GitHub v" + remote + "."
+        }
+    }
+
+    function requestLegacyUpdateFallback() {
         var xhr = new XMLHttpRequest()
         xhr.open("GET", updateRawUrl())
         try {
             xhr.setRequestHeader("Cache-Control", "no-cache")
             xhr.setRequestHeader("Pragma", "no-cache")
         } catch (ignoreHeaders) {}
+
         xhr.onreadystatechange = function() {
             if (xhr.readyState !== XMLHttpRequest.DONE) return
             updateBusy = false
@@ -144,26 +169,7 @@ MuseScore {
                 updateStatus = "Update-Prüfung fehlgeschlagen: HTTP " + xhr.status
                 return
             }
-
-            var source = xhr.responseText
-            if (!validateUpdateSource(source)) {
-                updateStatus = "Update abgebrochen: GitHub-Datei ist keine gültige AI-Notation-Studio-Version."
-                return
-            }
-
-            var remote = extractPluginVersion(source)
-            updateRemoteVersion = remote
-            updateStatus = "Gefunden: lokal v" + currentVersionString() + " · GitHub v" + remote
-
-            var cmp = compareVersions(currentVersionString(), remote)
-            if (cmp < 0) {
-                updateSourceText = source
-                updateStatus = "Neue Version verfügbar: lokal v" + currentVersionString() + " → GitHub v" + remote
-            } else if (cmp === 0) {
-                updateStatus = "Aktuell: lokal v" + currentVersionString() + " · GitHub v" + remote
-            } else {
-                updateStatus = "Installiert v" + currentVersionString() + " ist neuer als GitHub v" + remote + "."
-            }
+            acceptFetchedUpdate(xhr.responseText, false)
         }
 
         try {
@@ -171,6 +177,43 @@ MuseScore {
         } catch (e) {
             updateBusy = false
             updateStatus = "Update-Prüfung fehlgeschlagen: " + e
+        }
+    }
+
+    function checkForUpdate() {
+        if (updateBusy) return
+        updateBusy = true
+        updateRemoteVersion = ""
+        updateSourceText = ""
+        updateIsHotApp = false
+        updateStatus = "Prüfe auf Update …"
+
+        // Ab v0.8.0 liegt die eigentliche App in einer getrennten, live ladbaren Datei.
+        // Solange diese Datei noch nicht veröffentlicht ist, fällt der Updater auf
+        // die bisherige monolithische Plugin-Datei zurück.
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", updateHotAppUrl())
+        try {
+            xhr.setRequestHeader("Cache-Control", "no-cache")
+            xhr.setRequestHeader("Pragma", "no-cache")
+        } catch (ignoreHeaders) {}
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return
+
+            if (xhr.status >= 200 && xhr.status < 300 && validateUpdateSource(xhr.responseText)) {
+                updateBusy = false
+                acceptFetchedUpdate(xhr.responseText, true)
+                return
+            }
+
+            requestLegacyUpdateFallback()
+        }
+
+        try {
+            xhr.send()
+        } catch (e) {
+            requestLegacyUpdateFallback()
         }
     }
 
@@ -234,6 +277,38 @@ MuseScore {
         updateStatus = "Installiere v" + updateRemoteVersion + " …"
 
         try {
+            if (updateIsHotApp) {
+                var fileName = "AI-Notation-Studio-App-" + updateRemoteVersion + ".qml"
+                var hotTarget = siblingPluginUrl(fileName)
+                if (!hotTarget || hotTarget === "") {
+                    updateStatus = "Live-Update fehlgeschlagen: Zielpfad konnte nicht bestimmt werden."
+                    return
+                }
+
+                updaterFile.source = hotTarget
+                var hotOk = updaterFile.write(updateSourceText)
+                if (!hotOk) {
+                    updateStatus = "Live-Update fehlgeschlagen: App-Datei konnte nicht geschrieben werden."
+                    return
+                }
+
+                var hotVerify = updaterFile.read()
+                var hotVersion = extractPluginVersion(hotVerify)
+                if (hotVersion !== updateRemoteVersion) {
+                    updateStatus = "Live-Update fehlgeschlagen: Nachkontrolle meldet v" + hotVersion +
+                                   " statt v" + updateRemoteVersion + "."
+                    return
+                }
+
+                if (!activateHotApp(hotTarget, updateRemoteVersion))
+                    return
+
+                updateSourceText = ""
+                updateStatus = "v" + updateRemoteVersion +
+                               " installiert, geprüft und live aktiviert. Kein MuseScore-Neustart erforderlich."
+                return
+            }
+
             var target = resolvePluginTargetPath()
             if (!target || target === "") {
                 updateStatus = "Update fehlgeschlagen: laufende Plugin-Datei konnte nicht aufgelöst werden."
@@ -268,12 +343,13 @@ MuseScore {
             }
 
             updateStatus = "v" + updateRemoteVersion +
-                           " installiert und geprüft. MuseScore jetzt neu starten. Quelle: " + target
+                           " installiert und geprüft. Für diese Übergangsversion MuseScore einmal neu starten."
             updateSourceText = ""
         } catch (e) {
             updateStatus = "Update-Fehler: " + e
         }
     }
+
 
 
     function siblingPluginUrl(fileName) {

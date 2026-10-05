@@ -86,3 +86,11 @@ Erster belastbarer Git-Baseline-Stand.
 - Künftige Live-Updates werden als `AI-Notation-Studio-App-<Version>.qml` neben dem Plugin gespeichert, geprüft und ohne MuseScore-Neustart aktiviert.
 - Die aktive Live-App wird in den MuseScore-Einstellungen gespeichert und beim nächsten Start wieder geladen.
 - Für den einmaligen Wechsel von v0.7.9 auf v0.7.10 ist weiterhin ein MuseScore-Neustart erforderlich.
+
+## 0.8.0
+
+- Erste getrennte, live ladbare App-Version.
+- Der stabile Host v0.7.10 lädt die App über einen QML-`Loader` aus einer eigenen versionierten Datei.
+- Die App initialisiert sich über `bootstrapRun()`, wenn sie vom Host geladen wird.
+- Provider, Gedächtnis, Kompositionsfunktionen, Chat, Diagnose und der einklappbare Bereich **Technisches** bleiben Bestandteil der App.
+- Ziel des Tests: Installation und sofortige Aktivierung von v0.8.0 ohne MuseScore-Neustart.

@@ -1,0 +1,18 @@
+{
+  "uri": "musescore://extensions/ai-notation-studio",
+  "type": "form",
+  "title": "AI Notation Studio",
+  "description": "KI-Komposition, Analyse, Fortsetzung, Motiventwicklung, Instrumentation und partiturbezogener Chat für MuseScore Studio 4.7.",
+  "version": "0.8.0",
+  "vendor": "Klangwerke",
+  "ui_context": "ProjectOpened",
+  "apiversion": 2,
+  "actions": [
+    {
+      "code": "main",
+      "title": "AI Notation Studio",
+      "path": "Main.qml",
+      "show_on_appmenu": true
+    }
+  ]
+}

@@ -55,3 +55,12 @@ Erster belastbarer Git-Baseline-Stand.
 - Chat erklärt ausdrücklich, dass er nicht automatisch in die Partitur schreibt.
 - Neuer **Info**-Button mit Erklärung der Arbeitsbereiche, des Zwei-Stufen-Prinzips, Undo/Redo, Diagnose und Update.
 - Diese Version dient zugleich als kontrollierter Test des eingebauten Updaters.
+
+## 0.7.6
+
+- Zwei getrennte Gedächtnisebenen eingeführt.
+- **Generelles Gedächtnis** für allgemeine Arbeitsvorlieben und Vorbelegungen der Eingabe- und Auswahlfelder.
+- **Score-Gedächtnis** für Chat, letzten Auftrag, musikalische Fassung, technische Daten und Score-spezifische Notizen.
+- Score-Gedächtnis wird über MuseScores `metaTag()/setMetaTag()` direkt im jeweiligen Score abgelegt.
+- Globaler Chatverlauf wurde durch Score-spezifischen Chatverlauf ersetzt.
+- Neuer **Gedächtnis**-Dialog mit Anzeigen, Speichern, Neu laden und Leeren.

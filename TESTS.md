@@ -1,10 +1,10 @@
-# Testplan ab v0.5.8
+# Testplan v0.5.9 RC
 
 ## A. Start
 
 - [ ] Plugin wird von MuseScore erkannt.
 - [ ] Plugin-Fenster öffnet sich.
-- [ ] Version 0.5.8 wird angezeigt.
+- [ ] Version 0.5.9 wird angezeigt.
 - [ ] Keine QML-/JavaScript-Fehlermeldung beim Start.
 
 ## B. Einstellungen
@@ -15,42 +15,43 @@
 - [ ] Anthropic-Key bleibt erhalten.
 - [ ] Google-Key bleibt erhalten.
 
-## C. Auswahl
+## C. Auswahl und Analyse
 
 - [ ] einzelne Note wird gelesen.
 - [ ] mehrtaktige Bereichsauswahl wird gelesen.
-- [ ] mehrere Stimmen werden korrekt erfasst.
-- [ ] Auswahl über mehrere Systeme wird korrekt erfasst.
+- [ ] mehrere Stimmen/Systeme werden korrekt erfasst.
+- [ ] Analyse bezieht sich tatsächlich auf die Auswahl.
 
-## D. Analyse
+## D. Neue Stimme
 
-- [ ] „Auswahl analysieren“ liefert eine plausible Antwort.
-- [ ] Antwort bezieht sich tatsächlich auf die Auswahl.
-
-## E. Neue Stimme
-
-- [ ] `makeCompositionPrompt()` läuft ohne undefinierte Variablen.
+- [ ] `makeCompositionPrompt()` läuft ohne undefinierte Variable.
 - [ ] musikalische Kompositionsstufe funktioniert.
 - [ ] technische Umsetzungsstufe funktioniert.
 - [ ] neue Stimme lässt sich einfügen.
-- [ ] Zielinstrument stimmt.
-- [ ] Zeitraum entspricht der Auswahl.
+- [ ] Zielinstrument und Zeitraum stimmen.
 
-## F. Freie Komposition
+## E. Freie Komposition
 
+- [ ] leere Ausgangspartitur kann vorbereitet werden.
+- [ ] Partitur mit vorhandenen Noten wird vor `time-delete` abgewiesen und bleibt unverändert.
 - [ ] gewünschte Besetzung wird angelegt.
 - [ ] gewünschte Taktzahl wird hergestellt.
-- [ ] Noten landen in den richtigen Parts.
 - [ ] Klavier mit zwei Systemen funktioniert.
-- [ ] Tempo und Tonart werden korrekt übernommen, soweit v0.5.8 dies unterstützt.
-- [ ] überschüssige Takte werden korrekt behandelt.
+- [ ] Tonart und Tempo werden gesetzt.
+- [ ] `workTitle` wird gesetzt, ohne einen zweiten Titeltext hinzuzufügen.
+
+## F. Transaktionen
+
+- [ ] normaler Abschluss hinterlässt konsistente Undo-Historie.
+- [ ] Fehler nach `startCmd()` führt zu Rollback.
+- [ ] Fehler vor `startCmd()` ruft kein `endCmd(true)` auf.
 
 ## G. Regression
 
 - [ ] Zwei-Stufen-Verfahren bleibt erhalten.
-- [ ] bereits funktionierende Auswahl wird nicht beschädigt.
 - [ ] Providerwechsel beschädigt gespeicherte Keys nicht.
+- [ ] Auswahlfunktion aus v0.5.8 bleibt funktionsfähig.
 
 ## Freigabe
 
-Eine neue Version wird erst nach dokumentiertem Praxistest als stabil bezeichnet.
+v0.5.9 wird erst nach bestandenem Praxistest nach `main` übernommen.

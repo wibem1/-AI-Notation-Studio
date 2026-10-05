@@ -64,3 +64,10 @@ Erster belastbarer Git-Baseline-Stand.
 - Score-Gedächtnis wird über MuseScores `metaTag()/setMetaTag()` direkt im jeweiligen Score abgelegt.
 - Globaler Chatverlauf wurde durch Score-spezifischen Chatverlauf ersetzt.
 - Neuer **Gedächtnis**-Dialog mit Anzeigen, Speichern, Neu laden und Leeren.
+
+## 0.7.8
+
+- Provider, Modell und API-Key aus dem oberen musikalischen Arbeitsbereich entfernt.
+- Neuer eigener Bereich **Technisches** am unteren Rand der Oberfläche.
+- Der Bereich **Komposition / Analyse** enthält jetzt nur noch musikalisch relevante Bedienelemente.
+- Version 0.7.8 dient zugleich als kontrollierter Updater-Test von v0.7.7.

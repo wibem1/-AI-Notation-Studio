@@ -129,3 +129,7 @@ Keine zusätzlichen MuseScore-Schreibzugriffe.
 - Fortsetzen bei Taktartwechseln
 - sichtbares Titelverhalten von `workTitle`
 - alle neu hinzugefügten Instrument-IDs im Zielsystem
+
+## v0.7.2 – leere Endtakte
+
+Die frühere Strategie mit künstlicher Bereichsauswahl plus `time-delete` wurde für die freie Komposition entfernt. Verwendet wird jetzt ausschließlich die in MuseScore 4.7 registrierte Aktion `del-empty-measures` / `REMOVE_EMPTY_TRAILING_MEASURES_COMMAND`, und zwar erst nach dem Einfügen der Musik. Das entspricht direkt der vorgesehenen MuseScore-Funktion „Remove empty trailing measures“.

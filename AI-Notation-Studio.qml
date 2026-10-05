@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.2"
+    version: "0.7.3"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -151,6 +151,34 @@ MuseScore {
         }
     }
 
+    function resolvePluginTargetPath() {
+        var dir = ""
+
+        // Newer MuseScore/FileIO versions.
+        if (typeof updaterFile.pluginDirectoryPath === "function") {
+            try { dir = updaterFile.pluginDirectoryPath() } catch (e1) { dir = "" }
+        }
+
+        // Ältere MuseScore-Versionen: konfigurierter Plugin-Ordner.
+        if ((!dir || dir === "") && typeof updaterFile.pluginsUserPath === "function") {
+            try { dir = updaterFile.pluginsUserPath() } catch (e2) { dir = "" }
+        }
+
+        // Breiter kompatibler Fallback: MuseScore-Dokumentordner/Plugins.
+        if ((!dir || dir === "") && typeof updaterFile.userDataPath === "function") {
+            try {
+                var dataDir = updaterFile.userDataPath()
+                if (dataDir && dataDir !== "")
+                    dir = dataDir + "/Plugins"
+            } catch (e3) { dir = "" }
+        }
+
+        if (!dir || dir === "")
+            return ""
+
+        return dir + "/AI-Notation-Studio.qml"
+    }
+
     function installUpdate() {
         if (updateSourceText === "" || updateRemoteVersion === "") {
             updateStatus = "Kein neues Update zum Installieren."
@@ -160,19 +188,20 @@ MuseScore {
         updateStatus = "Installiere v" + updateRemoteVersion + " …"
 
         try {
-            var dir = updaterFile.pluginDirectoryPath()
-            if (!dir || dir === "") {
-                updateStatus = "Update fehlgeschlagen: Plugin-Ordner konnte nicht ermittelt werden."
+            var target = resolvePluginTargetPath()
+            if (!target || target === "") {
+                updateStatus = "Update fehlgeschlagen: MuseScore liefert keinen beschreibbaren Plugin-Pfad."
                 return
             }
 
-            var target = dir + "/AI-Notation-Studio.qml"
             updaterTargetPath = target
 
-            var writable = updaterFile.isPathWriteable(target)
-            if (!writable) {
-                updateStatus = "Update fehlgeschlagen: MuseScore darf diese Datei nicht schreiben. Pfad: " + target
-                return
+            if (typeof updaterFile.isPathWriteable === "function") {
+                var writable = updaterFile.isPathWriteable(target)
+                if (!writable) {
+                    updateStatus = "Update fehlgeschlagen: MuseScore darf diese Datei nicht schreiben. Pfad: " + target
+                    return
+                }
             }
 
             updaterFile.source = target
@@ -183,16 +212,11 @@ MuseScore {
                 return
             }
 
-            if (!updaterFile.exists()) {
-                updateStatus = "Update fehlgeschlagen: Zieldatei ist nach dem Schreiben nicht vorhanden."
-                return
-            }
-
             var verifyText = updaterFile.read()
             var verifyVersion = extractPluginVersion(verifyText)
             if (verifyVersion !== updateRemoteVersion) {
                 updateStatus = "Update fehlgeschlagen: Nachkontrolle meldet v" + verifyVersion +
-                               " statt v" + updateRemoteVersion + "."
+                               " statt v" + updateRemoteVersion + ". Pfad: " + target
                 return
             }
 
@@ -384,7 +408,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.2",
+                version: "0.7.3",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -1795,7 +1819,7 @@ MuseScore {
             spacing: 10
 
             Label {
-                text: "AI Notation Studio · v0.7.2"
+                text: "AI Notation Studio · v0.7.3"
                 color: "white"
                 font.pixelSize: 28
                 font.bold: true
@@ -2123,7 +2147,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.2: Leere Endtakte werden nicht mehr vorab per Bereichslöschung behandelt. Die Komposition wird zuerst eingefügt; danach ruft das Plugin ausschließlich MuseScores eigene Aktion „Remove empty trailing measures“ auf und kontrolliert die resultierende Taktzahl."
+                text: "v0.7.3: Updater kompatibel mit älteren FileIO-APIs. Er verwendet pluginDirectoryPath nur wenn vorhanden und fällt sonst auf pluginsUserPath bzw. userDataPath/Plugins zurück. Enthält außerdem die v0.7.2-Korrektur für leere Endtakte."
             }
         }
     }

@@ -77,3 +77,12 @@ Erster belastbarer Git-Baseline-Stand.
 - Bereich **Technisches** ist jetzt einklappbar.
 - Der Auf-/Zuklapp-Zustand wird als generelle Bedienpräferenz gespeichert.
 - Beim nächsten Start wird der zuletzt verwendete Zustand wiederhergestellt.
+
+## 0.7.10
+
+- Übergangsversion zur neuen Loader-Architektur.
+- Vorbereitung für versionierte App-Dateien, die über einen QML-Loader mit neuer URL geladen werden können.
+- Neuer Live-Update-Kanal `AI-Notation-Studio-App.qml` mit Rückfall auf die bisherige monolithische Plugin-Datei.
+- Künftige Live-Updates werden als `AI-Notation-Studio-App-<Version>.qml` neben dem Plugin gespeichert, geprüft und ohne MuseScore-Neustart aktiviert.
+- Die aktive Live-App wird in den MuseScore-Einstellungen gespeichert und beim nächsten Start wieder geladen.
+- Für den einmaligen Wechsel von v0.7.9 auf v0.7.10 ist weiterhin ein MuseScore-Neustart erforderlich.

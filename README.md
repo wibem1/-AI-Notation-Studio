@@ -1,59 +1,53 @@
 # AI Notation Studio v0.5.8
 
-## Konkrete Ursache der bisherigen Taktlösch-Fehler
+Aktueller, tatsächlich hochgeladener Ausgangsstand für die weitere Entwicklung.
 
-Die MuseScore-API dokumentiert und implementiert:
+## Status
 
-```cpp
-selectRange(int startTick, int endTick, int startStaff, int endStaff)
-```
+**v0.5.8 ist der Git-Baseline-Stand.**
 
-Dabei gilt:
+Maßgeblicher Quellcode:
 
-- `startTick`: inklusive
-- `endTick`: exklusive
-- `startStaff`: inklusive
-- `endStaff`: **exklusive**
+- `AI-Notation-Studio.qml`
 
-MuseScore prüft intern:
+Die ZIP-Datei bleibt nur als Archiv erhalten. Für die weitere Entwicklung ist der entpackte QML-Quellcode maßgeblich.
 
-```cpp
-if (startStaff >= endStaff) {
-    return false;
-}
-```
+## Aktuelle Funktionen
 
-Unsere bisherigen Versionen verwendeten:
+- Auswahl in MuseScore lesen
+- Auswahl musikalisch analysieren
+- neue Stimme zu einer vorhandenen Auswahl komponieren
+- freie Komposition ohne Vorlage
+- Zwei-Stufen-Verfahren: musikalische Komposition → technische Umsetzung
+- OpenAI, Anthropic und Google
+- lokale Speicherung von Provider, Modell und API-Key
+- Einfügen erzeugter Musik in MuseScore
 
-```qml
-score.selection.selectRange(startTick, endTick, 0, score.nstaves - 1)
-```
+## Wichtige Korrektur in v0.5.8
 
-Bei einer Ausgangspartitur mit genau einem System (`nstaves == 1`) wurde daraus:
+MuseScore verwendet bei
 
 ```qml
-selectRange(..., 0, 0)
+selection.selectRange(startTick, endTick, startStaff, endStaff)
 ```
 
-Diese Auswahl ist laut MuseScore-API ungültig und wurde daher immer mit
-`false` abgewiesen. Damit hatte `time-delete` nie einen gültigen Bereich.
+ein exklusives `endStaff`.
 
-## Korrektur in v0.5.8
-
-Jetzt wird korrekt verwendet:
+Daher ist für die gesamte Partitur korrekt:
 
 ```qml
-score.selection.selectRange(startTick, endTick, 0, score.nstaves)
+curScore.selection.selectRange(startTick, endTick, 0, curScore.nstaves)
 ```
 
-Bei einem System also:
+und nicht `curScore.nstaves - 1`.
 
-```qml
-selectRange(..., 0, 1)
-```
+## Entwicklungsorganisation ab jetzt
 
-Damit umfasst die Auswahl tatsächlich das vollständige erste System.
+- `main`: letzter tatsächlich verwendeter bzw. freigegebener Stand
+- `develop`: laufende Entwicklung
+- jede Änderung wird im `CHANGELOG.md` dokumentiert
+- bekannte Probleme stehen in `KNOWN-ISSUES.md`
+- MuseScore-API-Nutzung wird in `API-AUDIT.md` geprüft
+- vor einer neuen stabilen Version gilt der Testplan in `TESTS.md`
 
-Der gleiche Fehler wurde auch in der zusätzlichen Kürzungsroutine korrigiert.
-
-Sonst wurde an diesem Teil nichts geändert.
+Die zuvor versehentlich verwendete Bezeichnung 0.8.0 gehört nicht zur realen Versionsgeschichte und wird nicht weitergeführt.

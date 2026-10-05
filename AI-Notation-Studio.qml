@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.5"
+    version: "0.7.6"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -42,6 +42,8 @@ MuseScore {
     property int chatModeIndex: 0
     property string chatProposedInstruction: ""
     property int chatContextTurns: 12
+    property string scoreMemoryNotes: ""
+    property bool restoringMemory: false
     property bool infoOpen: false
 
     Settings {
@@ -56,6 +58,14 @@ MuseScore {
         property string keyGoogle: ""
         property int freeCompositionCounter: 0
         property string chatHistoryJson: "[]"
+        property string generalMemoryText: ""
+        property int defaultModeIndex: 0
+        property string defaultInstruction: ""
+        property string defaultFreeInstrumentation: "Violine, Cello"
+        property int defaultFreeMeasures: 16
+        property int defaultInstrumentIndex: 0
+        property int defaultChatModeIndex: 0
+        property bool defaultChatExpanded: false
     }
 
     FileIO {
@@ -233,6 +243,134 @@ MuseScore {
         } catch (e) {
             updateStatus = "Update-Fehler: " + e
         }
+    }
+
+
+    function scoreMemoryTagName() {
+        return "AI-Notation-Studio-Memory-v1"
+    }
+
+    function saveGeneralDefaults() {
+        if (restoringMemory) return
+        settings.defaultModeIndex = modeBox.currentIndex
+        settings.defaultInstruction = instructionBox.text
+        settings.defaultFreeInstrumentation = freeInstrumentation
+        settings.defaultFreeMeasures = freeMeasures
+        settings.defaultInstrumentIndex = instrumentBox.currentIndex
+        settings.defaultChatModeIndex = chatModeIndex
+        settings.defaultChatExpanded = chatExpanded
+    }
+
+    function restoreGeneralDefaults() {
+        restoringMemory = true
+        modeBox.currentIndex = Math.max(0, Math.min(modeBox.count - 1, settings.defaultModeIndex))
+        instructionBox.text = settings.defaultInstruction || ""
+        freeInstrumentation = settings.defaultFreeInstrumentation || "Violine, Cello"
+        freeMeasures = Number(settings.defaultFreeMeasures || 16)
+        instrumentBox.currentIndex = Math.max(0, Math.min(instrumentBox.count - 1, settings.defaultInstrumentIndex))
+        chatModeIndex = Number(settings.defaultChatModeIndex || 0)
+        chatExpanded = settings.defaultChatExpanded ? true : false
+        restoringMemory = false
+    }
+
+    function currentScoreMemoryObject() {
+        return {
+            schema: 1,
+            pluginVersion: root.version,
+            savedAt: new Date().toISOString(),
+            notes: scoreMemoryNotes,
+            instruction: instructionBox.text,
+            modeIndex: modeBox.currentIndex,
+            freeInstrumentation: freeInstrumentation,
+            freeMeasures: freeMeasures,
+            instrumentIndex: instrumentBox.currentIndex,
+            chatModeIndex: chatModeIndex,
+            chatMessages: chatMessages,
+            musicalDraft: musicalDraft,
+            compositionJson: compositionJson
+        }
+    }
+
+    function saveScoreMemory(silent) {
+        if (!curScore) {
+            if (!silent) statusText = "Kein Score geöffnet."
+            return false
+        }
+
+        try {
+            curScore.setMetaTag(scoreMemoryTagName(), JSON.stringify(currentScoreMemoryObject()))
+            if (!silent)
+                statusText = "Score-Gedächtnis aktualisiert. Bitte den Score speichern, damit es dauerhaft in der Datei bleibt."
+            return true
+        } catch (e) {
+            if (!silent) statusText = "Score-Gedächtnis konnte nicht gespeichert werden: " + e
+            return false
+        }
+    }
+
+    function loadScoreMemory(silent) {
+        if (!curScore) return false
+
+        var raw = ""
+        try { raw = String(curScore.metaTag(scoreMemoryTagName()) || "") } catch (e1) { raw = "" }
+
+        if (raw === "") {
+            chatMessages = []
+            scoreMemoryNotes = ""
+            musicalDraft = ""
+            compositionJson = ""
+            if (!silent) statusText = "Für diesen Score ist noch kein Score-Gedächtnis vorhanden."
+            return false
+        }
+
+        try {
+            var m = JSON.parse(raw)
+            restoringMemory = true
+            scoreMemoryNotes = String(m.notes || "")
+            chatMessages = m.chatMessages && m.chatMessages.length !== undefined ? m.chatMessages : []
+            musicalDraft = String(m.musicalDraft || "")
+            compositionJson = String(m.compositionJson || "")
+
+            if (m.instruction !== undefined) instructionBox.text = String(m.instruction)
+            if (m.modeIndex !== undefined) modeBox.currentIndex = Math.max(0, Math.min(modeBox.count - 1, Number(m.modeIndex)))
+            if (m.freeInstrumentation !== undefined) freeInstrumentation = String(m.freeInstrumentation)
+            if (m.freeMeasures !== undefined) freeMeasures = Number(m.freeMeasures)
+            if (m.instrumentIndex !== undefined) instrumentBox.currentIndex = Math.max(0, Math.min(instrumentBox.count - 1, Number(m.instrumentIndex)))
+            if (m.chatModeIndex !== undefined) chatModeIndex = Number(m.chatModeIndex)
+            restoringMemory = false
+
+            if (!silent) statusText = "Score-Gedächtnis geladen."
+            return true
+        } catch (e2) {
+            restoringMemory = false
+            if (!silent) statusText = "Score-Gedächtnis ist beschädigt oder unlesbar."
+            return false
+        }
+    }
+
+    function clearScoreMemory() {
+        if (!curScore) {
+            statusText = "Kein Score geöffnet."
+            return
+        }
+        try {
+            curScore.setMetaTag(scoreMemoryTagName(), "")
+            scoreMemoryNotes = ""
+            chatMessages = []
+            musicalDraft = ""
+            compositionJson = ""
+            statusText = "Score-Gedächtnis geleert. Bitte den Score speichern."
+        } catch (e) {
+            statusText = "Score-Gedächtnis konnte nicht geleert werden: " + e
+        }
+    }
+
+    function generalMemorySummary() {
+        return "Standardmodus: " + modeBox.currentText +
+               "\nStandardbesetzung: " + settings.defaultFreeInstrumentation +
+               "\nStandardtaktzahl: " + settings.defaultFreeMeasures +
+               "\nStandardinstrument: " + instrumentBox.currentText +
+               "\nChatmodus: " + (settings.defaultChatModeIndex === 0 ? "Nur besprechen" : "Änderung vorbereiten")
     }
 
     function providerName() {
@@ -415,7 +553,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.5",
+                version: "0.7.6",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -1406,6 +1544,7 @@ MuseScore {
                     compositionJson = candidate
                     aiAnswer = "MUSIKALISCHE FASSUNG:\n\n" + draft + "\n\n---\n\nTECHNISCHE UMSETZUNG:\n\n" + technical
                     statusText = labels[mode] + " fertig und zum Einfügen bereit."
+                    saveScoreMemory(true)
                 } catch (e) {
                     compositionJson = ""
                     aiAnswer = technical
@@ -1493,14 +1632,11 @@ MuseScore {
     }
 
     function loadChatHistory() {
-        try {
-            var a = JSON.parse(settings.chatHistoryJson || "[]")
-            chatMessages = a && a.length !== undefined ? a : []
-        } catch (e) { chatMessages = [] }
+        loadScoreMemory(true)
     }
 
     function saveChatHistory() {
-        try { settings.chatHistoryJson = JSON.stringify(chatMessages) } catch (e) {}
+        saveScoreMemory(true)
     }
 
     function clearChatHistory() {
@@ -1734,6 +1870,7 @@ MuseScore {
                             aiAnswer = "MUSIKALISCHE KOMPOSITION:\n\n" + draft +
                                        "\n\n---\n\nTECHNISCHE UMSETZUNG:\n\n" + technical
                             statusText = "Komposition fertig und zum Einfügen bereit."
+                            saveScoreMemory(true)
                         } else {
                             compositionJson = ""
                             aiAnswer = "MUSIKALISCHE KOMPOSITION:\n\n" + draft +
@@ -1790,6 +1927,7 @@ MuseScore {
                         aiAnswer = "FREIE KOMPOSITION:\n\n" + draft +
                                    "\n\n---\n\nTECHNISCHE UMSETZUNG:\n\n" + technical
                         statusText = "Freie Komposition fertig und zum Einfügen bereit."
+                        saveScoreMemory(true)
                     } else {
                         compositionJson = ""
                         aiAnswer = "FREIE KOMPOSITION:\n\n" + draft +
@@ -1812,8 +1950,133 @@ MuseScore {
         else providerBox.currentIndex = 0
 
         loadProviderFields()
+        restoreGeneralDefaults()
         loadChatHistory()
-        statusText = "Markiere eine Passage und klicke auf „Auswahl neu lesen“ oder „An KI senden“."
+        statusText = "Bereit. Allgemeine Vorbelegungen geladen; vorhandenes Score-Gedächtnis wurde diesem Score zugeordnet."
+    }
+
+    Dialog {
+        id: memoryDialog
+        title: "Gedächtnis"
+        modal: true
+        standardButtons: Dialog.Close
+        width: 680
+
+        contentItem: ScrollView {
+            implicitWidth: 650
+            implicitHeight: 620
+
+            ColumnLayout {
+                width: 620
+                spacing: 10
+
+                Label {
+                    text: "GENERELLES GEDÄCHTNIS"
+                    font.pixelSize: 18
+                    font.bold: true
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: "Gilt für alle Scores. Hier stehen allgemeine Arbeitsvorlieben und die Vorbelegungen der Eingabe- und Auswahlfelder."
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: generalMemorySummary()
+                    color: "#666666"
+                }
+
+                TextArea {
+                    id: generalMemoryBox
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 130
+                    wrapMode: TextEdit.Wrap
+                    placeholderText: "Allgemeine Regeln und Vorlieben, die für alle Scores gelten …"
+                }
+
+                RowLayout {
+                    Button {
+                        text: "Generelles Gedächtnis speichern"
+                        onClicked: {
+                            settings.generalMemoryText = generalMemoryBox.text
+                            saveGeneralDefaults()
+                            statusText = "Generelles Gedächtnis gespeichert."
+                        }
+                    }
+
+                    Button {
+                        text: "Generelles Gedächtnis leeren"
+                        onClicked: {
+                            settings.generalMemoryText = ""
+                            generalMemoryBox.text = ""
+                            statusText = "Generelles Gedächtnis geleert."
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 1
+                    color: "#888888"
+                }
+
+                Label {
+                    text: "GEDÄCHTNIS DIESES SCORES"
+                    font.pixelSize: 18
+                    font.bold: true
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: "Gilt nur für den geöffneten Score. Chat, letzter Auftrag und musikalische Arbeitsstände werden getrennt von anderen Scores gespeichert."
+                }
+
+                TextArea {
+                    id: scoreMemoryBox
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 150
+                    wrapMode: TextEdit.Wrap
+                    placeholderText: "Notizen und Entscheidungen zu diesem Score …"
+                }
+
+                RowLayout {
+                    Button {
+                        text: "Score-Gedächtnis speichern"
+                        onClicked: {
+                            scoreMemoryNotes = scoreMemoryBox.text
+                            saveScoreMemory(false)
+                        }
+                    }
+
+                    Button {
+                        text: "Score-Gedächtnis neu laden"
+                        onClicked: {
+                            loadScoreMemory(false)
+                            scoreMemoryBox.text = scoreMemoryNotes
+                        }
+                    }
+
+                    Button {
+                        text: "Score-Gedächtnis leeren"
+                        onClicked: {
+                            clearScoreMemory()
+                            scoreMemoryBox.text = ""
+                        }
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    color: "#666666"
+                    text: "Wichtig: Das Score-Gedächtnis liegt als MuseScore-Metadatum im Score. Den Score danach speichern, damit es dauerhaft in der Datei bleibt."
+                }
+            }
+        }
     }
 
     Dialog {
@@ -1833,7 +2096,7 @@ MuseScore {
                 selectByMouse: true
                 font.pixelSize: 15
                 text:
-                    "AI Notation Studio v0.7.5\n\n" +
+                    "AI Notation Studio v0.7.6\n\n" +
                     "KOMPOSITION / ANALYSE\n" +
                     "Dieser Bereich führt den eigentlichen musikalischen Auftrag aus. Der gewählte Modus bestimmt, ob analysiert, eine neue Stimme komponiert, frei komponiert, fortgesetzt, ein Motiv entwickelt, eine Variante erzeugt oder neu instrumentiert wird.\n\n" +
                     "PARTITUR-CHAT\n" +
@@ -1844,6 +2107,8 @@ MuseScore {
                     "Verwendet MuseScores eigene Undo-Historie.\n\n" +
                     "PROTOKOLL / DIAGNOSE\n" +
                     "Zeigt die Kommunikation, technische Daten und Tokenwerte. API-Keys werden nicht in die Diagnose übernommen.\n\n" +
+                    "GEDÄCHTNIS\n" +
+                    "Es gibt zwei getrennte Ebenen. Das generelle Gedächtnis enthält allgemeine Arbeitsvorlieben und Vorbelegungen der Felder. Das Score-Gedächtnis gehört ausschließlich zum geöffneten Score und enthält Chat, letzten Auftrag und Arbeitsstände.\n\n" +
                     "UPDATE\n" +
                     "„Update prüfen“ sucht die aktuelle Version auf GitHub. „Update installieren“ ersetzt die Plugin-Datei; danach MuseScore neu starten."
             }
@@ -1863,11 +2128,21 @@ MuseScore {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "AI Notation Studio · v0.7.5"
+                    text: "AI Notation Studio · v0.7.6"
                     color: "white"
                     font.pixelSize: 28
                     font.bold: true
                     Layout.fillWidth: true
+                }
+
+                Button {
+                    text: "Gedächtnis"
+                    font.pixelSize: 14
+                    onClicked: {
+                        generalMemoryBox.text = settings.generalMemoryText
+                        scoreMemoryBox.text = scoreMemoryNotes
+                        memoryDialog.open()
+                    }
                 }
 
                 Button {
@@ -1968,7 +2243,9 @@ MuseScore {
                     Layout.fillWidth: true
                     model: ["OpenAI", "Anthropic", "Google"]
                     font.pixelSize: uiSize
-                    onCurrentIndexChanged: loadProviderFields()
+                    onCurrentIndexChanged: {
+                        loadProviderFields()
+                    }
                 }
 
                 Label {
@@ -2018,6 +2295,7 @@ MuseScore {
                     model: ["Auswahl analysieren", "Neue Stimme zu Auswahl", "Freie Komposition ohne Vorlage", "Fortsetzen", "Aus Motiv entwickeln", "Variante erzeugen", "Für andere Besetzung bearbeiten"]
                     currentIndex: 0
                     font.pixelSize: uiSize
+                    onCurrentIndexChanged: saveGeneralDefaults()
                 }
 
                 Label {
@@ -2033,7 +2311,10 @@ MuseScore {
                     text: freeInstrumentation
                     font.pixelSize: uiSize
                     placeholderText: "z. B. Violine, Cello, Flöte, Oboe, Klarinette, Fagott, Horn, Trompete, Posaune, Tuba"
-                    onTextChanged: freeInstrumentation = text
+                    onTextChanged: {
+                        freeInstrumentation = text
+                        saveGeneralDefaults()
+                    }
                 }
 
                 Label {
@@ -2050,7 +2331,10 @@ MuseScore {
                     value: freeMeasures
                     editable: true
                     font.pixelSize: uiSize
-                    onValueChanged: freeMeasures = value
+                    onValueChanged: {
+                        freeMeasures = value
+                        saveGeneralDefaults()
+                    }
                 }
 
                 Label {
@@ -2066,6 +2350,7 @@ MuseScore {
                     Layout.fillWidth: true
                     model: ["Violine", "Viola", "Cello", "Kontrabass", "Klavier"]
                     font.pixelSize: uiSize
+                    onCurrentIndexChanged: saveGeneralDefaults()
                 }
             }
 
@@ -2083,6 +2368,7 @@ MuseScore {
                 wrapMode: TextEdit.Wrap
                 font.pixelSize: uiSize
                 placeholderText: "Hier den eigentlichen musikalischen Auftrag eingeben …"
+                onTextChanged: saveGeneralDefaults()
             }
 
             RowLayout {
@@ -2185,7 +2471,10 @@ MuseScore {
                     Button {
                         text: chatExpanded ? "Chat schließen" : "Chat öffnen"
                         font.pixelSize: 14
-                        onClicked: chatExpanded = !chatExpanded
+                        onClicked: {
+                            chatExpanded = !chatExpanded
+                            saveGeneralDefaults()
+                        }
                     }
                 }
             }
@@ -2219,7 +2508,10 @@ MuseScore {
                             id: chatModeBox
                             model: ["Nur besprechen", "Änderung vorbereiten"]
                             currentIndex: chatModeIndex
-                            onCurrentIndexChanged: chatModeIndex = currentIndex
+                            onCurrentIndexChanged: {
+                                chatModeIndex = currentIndex
+                                saveGeneralDefaults()
+                            }
                             font.pixelSize: 14
                         }
 
@@ -2270,7 +2562,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.5: Updateprüfung mit Cache-Buster und No-Cache-Headern; lokale und auf GitHub gefundene Versionsnummer werden sichtbar angezeigt. Enthält Layout und Info aus v0.7.4."
+                text: "v0.7.6: getrenntes generelles und Score-bezogenes Gedächtnis. Allgemeine Vorbelegungen gelten für alle Scores; Chat, letzter Auftrag und Arbeitsstände werden als MuseScore-Metadatum nur im jeweiligen Score gespeichert."
             }
         }
     }

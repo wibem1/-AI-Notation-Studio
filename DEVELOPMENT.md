@@ -27,3 +27,9 @@ Kompositionsfunktionen arbeiten zweistufig:
 2. technische MuseScore-Umsetzung
 
 Keine Vorentwurfsphase.
+
+## Loader-Architektur ab v0.7.10
+
+v0.7.10 ist die Brücke vom monolithischen Plugin zur getrennten Loader/App-Struktur. Der klassische Einstieg `AI-Notation-Studio.qml` bleibt der MuseScore-Plugin-Host. Er enthält einen Loader, der künftig versionierte App-Dateien mit jeweils neuer URL lädt. Dadurch soll der bekannte QML-Komponenten-Cache umgangen werden, ohne MuseScore nach jedem Update neu zu starten.
+
+Der Update-Feed prüft zuerst `AI-Notation-Studio-App.qml`. Ist diese Datei noch nicht veröffentlicht oder ungültig, wird auf `AI-Notation-Studio.qml` zurückgefallen. Eine Live-App wird lokal unter `AI-Notation-Studio-App-<Version>.qml` gespeichert, nachgelesen, anhand der Versionsnummer geprüft und erst danach aktiviert.

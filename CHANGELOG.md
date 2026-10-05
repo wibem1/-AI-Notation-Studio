@@ -1,50 +1,24 @@
 # Changelog
 
-Alle relevanten Änderungen von AI Notation Studio werden ab jetzt hier fortlaufend dokumentiert.
+Ab diesem Repository-Stand wird die Entwicklung fortlaufend dokumentiert.
 
-## 0.8.0 — Release Candidate
+## 0.5.8 — aktueller Baseline-Stand
 
-- Partiturbezogener Chat ergänzt.
-- Chat-Modi **Besprechen** und **Ändern**.
-- Markierte Passage wird dem Chat als musikalischer Kontext mitgegeben.
-- Im Modus **Ändern** wird nur ein Bearbeitungsauftrag erzeugt; keine automatische Partituränderung.
-- Chatverlauf wird lokal gespeichert; für den API-Kontext werden standardmäßig die letzten 12 Nachrichten verwendet.
-- Chat-Aufrufe fließen in Diagnose, Kommunikationsprotokoll und Tokenkontrolle ein.
+- Auswahl wird über `curScore.selection.elements` gelesen.
+- Analyse einer markierten Passage.
+- Komposition einer neuen Stimme zu einer markierten Passage.
+- Freie Komposition ohne Vorlage.
+- Zwei-Stufen-Verfahren:
+  1. musikalische Komposition
+  2. technische Umsetzung für MuseScore
+- Provider: OpenAI, Anthropic, Google.
+- Instrumente für neue Stimmen: Violine, Viola, Cello, Kontrabass, Klavier.
+- Korrektur von `selection.selectRange(...)`: `endStaff` ist exklusiv; daher wird `curScore.nstaves` verwendet.
 
-Status: **Release Candidate / noch nicht als stabil freigegeben**.
+## Frühere Stände
 
-## 0.7.1
+Frühere Versionen entstanden vor Einrichtung dieses Git-Repositories. Sie sind nicht vollständig als Git-Historie vorhanden.
 
-- Vollständiger A/B/C-Audit der verwendeten MuseScore-Schnittstellen.
-- Variantenmodus vereinfacht: genau eine Variante pro Lauf.
-- Keine bekannte Verwendung einer API der Klasse C.
+## Hinweis
 
-## 0.7.0
-
-- Neue Modi: Fortsetzen, Aus Motiv entwickeln, Varianten, andere Besetzung.
-- Kontextuelle Zwei-Stufen-Verarbeitung eingeführt.
-- Token-Erfassung pro Provider verbessert.
-
-## 0.6.2
-
-- MuseScore-eigenes Rückgängig/Wiederholen ergänzt.
-- Keine separate Undo-Historie im Plugin.
-
-## 0.6.1
-
-- Kommunikationsprotokoll ergänzt.
-- Laufdiagnose ergänzt.
-- Token- und Kostenkontrolle ergänzt.
-- Unbekannte Modellpreise werden nicht geschätzt.
-
-## 0.6.0
-
-- Neuaufbau als MuseScore-4.7-Extension.
-- `manifest.json`, `apiversion: 2`, `ExtensionBlank`, `MuseApi.Engraving`.
-- Legacy-Root `MuseScore { pluginType: "dialog" }` entfernt.
-- Titelbehandlung und Taktvorbereitung überarbeitet.
-- API-Check ergänzt.
-
-## Vor 0.6.0
-
-Vor-Git-Entwicklungsstände wurden als Chat-Artefakte erzeugt und sind nicht als stabile Releases zu behandeln.
+Die zwischenzeitlich in der Dokumentation auftauchende Versionsreihe 0.6.x–0.8.x war keine reale veröffentlichte Entwicklungslinie dieses Plugins und wurde entfernt.

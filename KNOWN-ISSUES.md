@@ -1,29 +1,20 @@
-# Bekannte Probleme und Grenzen
+# Bekannte Probleme und offene Punkte
 
-Stand: 0.8.0 RC
+Stand: **v0.5.8**
 
-## Noch praktisch zu verifizieren
+## Bestätigter Codefehler
 
-- Installation und Start der neuen 4.7-Extension auf dem Zielsystem.
-- Taktkürzung über `time-delete` in der aktuellen MuseScore-Version.
-- Undo/Redo über die verifizierten MuseScore-Action-Codes.
-- Einfügen mehrerer Parts und Klavier mit zwei Systemen.
-- Titel-/Metadatenverhalten in realen Partituren.
-- Chat-Persistenz über Neustart von MuseScore hinweg.
-- Tokenfelder der aktuell verwendeten Provider/Modelle.
+In `makeCompositionPrompt()` wird derzeit `userText` verwendet, obwohl im aktuellen Plugin kein entsprechender Wert definiert ist. Das kann den Modus **Neue Stimme zu Auswahl** beim Erzeugen des musikalischen Prompts abbrechen. Dieser Fehler ist dokumentiert, aber in v0.5.8 noch nicht behoben.
 
-## Bewusste Grenzen
+## Offene technische Punkte
 
-- Kosten werden nur berechnet, wenn ein verifizierter Modellpreis hinterlegt ist.
-- Der Chat schreibt nie automatisch in die Partitur.
-- Der Variantenmodus erzeugt genau eine Variante pro Lauf.
-- Neue Partituren werden nicht über `newScore()` automatisch geöffnet, da dies in der MuseScore-API nicht vollständig implementiert ist.
+- Taktlöschung über `time-delete` muss in der realen Anwendung erneut geprüft werden.
+- Das korrekte Anlegen verschiedener Instrumente und besonders eines Klaviers mit zwei Systemen muss praktisch geprüft werden.
+- Die freie Komposition erzeugt neue Parts; deren Struktur muss bei allen unterstützten Instrumenten kontrolliert werden.
+- Die aktuelle Version besitzt noch keine systematische Diagnose-/Protokollfunktion.
+- Es gibt noch keinen eingebauten Chat.
+- Es gibt noch kein eigenes Undo/Redo-Bedienfeld im Plugin.
 
-## API-Klasse B
+## Entwicklungsorganisation
 
-Besonders sorgfältig zu testen:
-
-- `api.engraving.newElement(...)`
-- `api.engraving.cmd("time-delete")`
-- `api.engraving.cmd("action://notation/undo")`
-- `api.engraving.cmd("action://notation/redo")`
+Mit Einrichtung dieses Repositories ist v0.5.8 der erste belastbare Git-Ausgangspunkt. Künftige Änderungen müssen auf `develop` entstehen und dokumentiert werden.

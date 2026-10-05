@@ -1,56 +1,47 @@
-# Testplan ab v0.5.8
+# Testplan v0.7.0
 
-## A. Start
+## Start und Update
 
-- [ ] Plugin wird von MuseScore erkannt.
-- [ ] Plugin-Fenster öffnet sich.
-- [ ] Version 0.5.8 wird angezeigt.
-- [ ] Keine QML-/JavaScript-Fehlermeldung beim Start.
+- [ ] Plugin öffnet sich als v0.7.0.
+- [ ] Updateprüfung funktioniert weiterhin.
+- [ ] Provider, Modell und Keys bleiben erhalten.
 
-## B. Einstellungen
+## Bestehende Funktionen
 
-- [ ] Providerwahl funktioniert.
-- [ ] Modellfeld funktioniert.
-- [ ] OpenAI-Key bleibt erhalten.
-- [ ] Anthropic-Key bleibt erhalten.
-- [ ] Google-Key bleibt erhalten.
+- [ ] Auswahl lesen
+- [ ] Auswahl analysieren
+- [ ] neue Stimme zu Auswahl
+- [ ] freie Komposition
+- [ ] Zwei-Stufen-Verfahren
 
-## C. Auswahl
+## Neue Kontextmodi
 
-- [ ] einzelne Note wird gelesen.
-- [ ] mehrtaktige Bereichsauswahl wird gelesen.
-- [ ] mehrere Stimmen werden korrekt erfasst.
-- [ ] Auswahl über mehrere Systeme wird korrekt erfasst.
+- [ ] Fortsetzen am Partiturende
+- [ ] Fortsetzen außerhalb des Partiturendes wird sicher abgewiesen
+- [ ] Aus Motiv entwickeln
+- [ ] Variante erzeugen: genau eine Variante
+- [ ] andere Besetzung
+- [ ] neue Zielparts haben die richtigen Instrumente
+- [ ] Klavier besitzt zwei Systeme
 
-## D. Analyse
+## Chat
 
-- [ ] „Auswahl analysieren“ liefert eine plausible Antwort.
-- [ ] Antwort bezieht sich tatsächlich auf die Auswahl.
+- [ ] Besprechen verändert die Partitur nicht
+- [ ] markierte Passage wird als Kontext berücksichtigt
+- [ ] Ändern erzeugt einen Bearbeitungsauftrag
+- [ ] Bearbeitungsauftrag lässt sich ins Auftragsfeld übernehmen
+- [ ] Neuer Chat leert den Verlauf
+- [ ] Chat bleibt nach Neustart erhalten
 
-## E. Neue Stimme
+## Undo/Redo
 
-- [ ] `makeCompositionPrompt()` läuft ohne undefinierte Variablen.
-- [ ] musikalische Kompositionsstufe funktioniert.
-- [ ] technische Umsetzungsstufe funktioniert.
-- [ ] neue Stimme lässt sich einfügen.
-- [ ] Zielinstrument stimmt.
-- [ ] Zeitraum entspricht der Auswahl.
+- [ ] Rückgängig nimmt die letzte Plugin-Änderung zurück
+- [ ] Wiederholen stellt sie wieder her
+- [ ] normale MuseScore-Historie bleibt konsistent
 
-## F. Freie Komposition
+## Diagnose und Protokoll
 
-- [ ] gewünschte Besetzung wird angelegt.
-- [ ] gewünschte Taktzahl wird hergestellt.
-- [ ] Noten landen in den richtigen Parts.
-- [ ] Klavier mit zwei Systemen funktioniert.
-- [ ] Tempo und Tonart werden korrekt übernommen, soweit v0.5.8 dies unterstützt.
-- [ ] überschüssige Takte werden korrekt behandelt.
-
-## G. Regression
-
-- [ ] Zwei-Stufen-Verfahren bleibt erhalten.
-- [ ] bereits funktionierende Auswahl wird nicht beschädigt.
-- [ ] Providerwechsel beschädigt gespeicherte Keys nicht.
-
-## Freigabe
-
-Eine neue Version wird erst nach dokumentiertem Praxistest als stabil bezeichnet.
+- [ ] Kommunikationsprotokoll wird angezeigt
+- [ ] Diagnose enthält keine API-Keys
+- [ ] Tokenwerte werden für verwendete Provider erfasst
+- [ ] unbekannte Kosten werden als nicht berechenbar bezeichnet

@@ -1,4 +1,4 @@
-# API-Audit – AI Notation Studio v0.5.9 RC
+# API-Audit – AI Notation Studio v0.6.0 RC
 
 Stand: vollständiger Audit des tatsächlich hochgeladenen Codes auf Branch `develop`.
 
@@ -258,3 +258,21 @@ Die vier im Audit gefundenen C-Punkte wurden auf `develop` korrigiert:
 4. `cmdStarted` verfolgt den Transaktionszustand; Rollback nur bei tatsächlich gestartetem `startCmd()`
 
 Damit gibt es im aktuellen v0.5.9-Code keinen bekannten C-Punkt aus dem v0.5.8-Audit mehr. Die B-Punkte bleiben praktische Testfälle.
+
+
+## v0.6.0 — Updatefunktion
+
+Neu verwendet:
+
+- `import FileIO 3.0`
+- `FileIO.pluginDirectoryPath()`
+- `FileIO.isPathWriteable(path)`
+- `FileIO.write(data)`
+
+Diese Methoden sind im aktuellen MuseScore-4.7-API-v1-Quellcode ausdrücklich für Plugins vorgesehen.
+
+MuseScore beschränkt Schreibzugriffe auf freigegebene Benutzerverzeichnisse, darunter den konfigurierten Plugin-Ordner. Der Updater bestimmt den Zielordner nicht durch einen geratenen macOS-Pfad, sondern über `pluginDirectoryPath()`.
+
+Bewertung: **A/B, quellcode-verifiziert und für genau diesen Zweck vorgesehen.**
+
+Praktischer Zielsystemtest steht noch aus.

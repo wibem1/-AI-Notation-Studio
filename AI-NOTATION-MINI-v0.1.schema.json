@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wibem1/AI-Notation-Studio/AI-NOTATION-MINI-v0.1.schema.json",
+  "title": "AI Notation Mini v0.1",
+  "type": "object",
+  "required": ["format", "version", "score", "parts"],
+  "properties": {
+    "format": { "const": "AI-Notation-Mini" },
+    "version": { "const": "0.1" },
+    "score": {
+      "type": "object",
+      "required": ["title", "timeSignature", "tempo"],
+      "properties": {
+        "title": { "type": "string" },
+        "key": { "type": "string" },
+        "timeSignature": { "type": "string", "pattern": "^[0-9]+/[0-9]+$" },
+        "tempo": {
+          "type": "object",
+          "required": ["bpm"],
+          "properties": {
+            "text": { "type": "string" },
+            "bpm": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/part" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "duration": {
+      "type": "string",
+      "enum": ["whole","half","quarter","eighth","16th","32nd","64th"]
+    },
+    "pitch": {
+      "type": "string",
+      "pattern": "^[A-G](bb|b|#|##)?-?[0-9]+$"
+    },
+    "part": {
+      "type": "object",
+      "required": ["id","instrument","measures"],
+      "properties": {
+        "id": { "type": "string" },
+        "instrument": { "type": "string" },
+        "measures": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/measure" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "measure": {
+      "type": "object",
+      "required": ["number","voices"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "voices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["voice","events"],
+            "properties": {
+              "voice": { "type": "integer", "minimum": 1, "maximum": 4 },
+              "events": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/event" }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type","pitch","duration"],
+          "properties": {
+            "type": { "const": "note" },
+            "pitch": { "$ref": "#/$defs/pitch" },
+            "duration": { "$ref": "#/$defs/duration" },
+            "dots": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "tie": { "type": "string", "enum": ["start","stop"] },
+            "dynamic": { "type": "string" },
+            "articulations": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["staccato","staccatissimo","tenuto","accent","marcato"]
+              },
+              "uniqueItems": true
+            },
+            "slur": { "type": "string", "enum": ["start","stop"] },
+            "expressionText": { "type": "string" },
+            "techniqueText": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","pitches","duration"],
+          "properties": {
+            "type": { "const": "chord" },
+            "pitches": {
+              "type": "array",
+              "minItems": 2,
+              "items": { "$ref": "#/$defs/pitch" }
+            },
+            "duration": { "$ref": "#/$defs/duration" },
+            "dots": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "dynamic": { "type": "string" },
+            "articulations": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["staccato","staccatissimo","tenuto","accent","marcato"]
+              },
+              "uniqueItems": true
+            },
+            "slur": { "type": "string", "enum": ["start","stop"] },
+            "expressionText": { "type": "string" },
+            "techniqueText": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type","duration"],
+          "properties": {
+            "type": { "const": "rest" },
+            "duration": { "$ref": "#/$defs/duration" },
+            "dots": { "type": "integer", "minimum": 0, "maximum": 3 }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

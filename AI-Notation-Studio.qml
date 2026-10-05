@@ -8,7 +8,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.8"
+    version: "0.7.9"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -44,6 +44,7 @@ MuseScore {
     property int chatContextTurns: 12
     property string scoreMemoryNotes: ""
     property bool restoringMemory: false
+    property bool technicalExpanded: false
     property bool infoOpen: false
 
     Settings {
@@ -66,6 +67,7 @@ MuseScore {
         property int defaultInstrumentIndex: 0
         property int defaultChatModeIndex: 0
         property bool defaultChatExpanded: false
+        property bool defaultTechnicalExpanded: false
     }
 
     FileIO {
@@ -283,6 +285,7 @@ MuseScore {
         settings.defaultInstrumentIndex = instrumentBox.currentIndex
         settings.defaultChatModeIndex = chatModeIndex
         settings.defaultChatExpanded = chatExpanded
+        settings.defaultTechnicalExpanded = technicalExpanded
     }
 
     function restoreGeneralDefaults() {
@@ -294,6 +297,7 @@ MuseScore {
         instrumentBox.currentIndex = Math.max(0, Math.min(instrumentBox.count - 1, settings.defaultInstrumentIndex))
         chatModeIndex = Number(settings.defaultChatModeIndex || 0)
         chatExpanded = settings.defaultChatExpanded ? true : false
+        technicalExpanded = settings.defaultTechnicalExpanded ? true : false
         restoringMemory = false
     }
 
@@ -577,7 +581,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.8",
+                version: "0.7.9",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -2120,7 +2124,7 @@ MuseScore {
                 selectByMouse: true
                 font.pixelSize: 15
                 text:
-                    "AI Notation Studio v0.7.8\n\n" +
+                    "AI Notation Studio v0.7.9\n\n" +
                     "KOMPOSITION / ANALYSE\n" +
                     "Dieser Bereich führt den eigentlichen musikalischen Auftrag aus. Der gewählte Modus bestimmt, ob analysiert, eine neue Stimme komponiert, frei komponiert, fortgesetzt, ein Motiv entwickelt, eine Variante erzeugt oder neu instrumentiert wird.\n\n" +
                     "PARTITUR-CHAT\n" +
@@ -2154,7 +2158,7 @@ MuseScore {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "AI Notation Studio · v0.7.8"
+                    text: "AI Notation Studio · v0.7.9"
                     color: "white"
                     font.pixelSize: 28
                     font.bold: true
@@ -2542,6 +2546,7 @@ MuseScore {
                 RowLayout {
                     anchors.fill: parent
                     anchors.margins: 10
+                    spacing: 10
 
                     Label {
                         text: "TECHNISCHES"
@@ -2556,10 +2561,20 @@ MuseScore {
                         color: "#c9c9c9"
                         font.pixelSize: 13
                     }
+
+                    Button {
+                        text: technicalExpanded ? "Einklappen" : "Aufklappen"
+                        font.pixelSize: 13
+                        onClicked: {
+                            technicalExpanded = !technicalExpanded
+                            saveGeneralDefaults()
+                        }
+                    }
                 }
             }
 
             GridLayout {
+                visible: technicalExpanded
                 Layout.fillWidth: true
                 columns: 2
                 columnSpacing: 12
@@ -2615,7 +2630,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.8: Provider, Modell und API-Key wurden aus dem musikalischen Arbeitsbereich herausgenommen und unten in der eigenen Rubrik „Technisches“ zusammengefasst. Diese Version dient zugleich als Updater-Test von v0.7.7."
+                text: "v0.7.9: Der Bereich „Technisches“ ist jetzt einklappbar. Der Zustand wird als allgemeine Bedienpräferenz gespeichert und beim nächsten Start wiederhergestellt."
             }
         }
     }

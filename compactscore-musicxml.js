@@ -24,8 +24,15 @@ function flatten(events){
  });
  if(stack.length)throw Error('Nicht geschlossenes Tuplet.');return result;
 }
+function instrumentName(name){
+ var low=String(name||'piano').toLowerCase().replace(/[\s_-]/g,'');
+ var aliases={klavier:'piano',pianoforte:'piano',violine:'violin',bratsche:'viola',violoncello:'cello',kontrabass:'contrabass',doublebass:'contrabass','flöte':'flute',floete:'flute',klarinette:'clarinet',fagott:'bassoon',trompete:'trumpet',posaune:'trombone',harfe:'harp',orgel:'organ'};
+ if(aliases[low])return aliases[low];
+ var known=Object.keys(PROGRAM);for(var i=0;i<known.length;i++)if(low===known[i]||low.indexOf('.'+known[i])>=0)return known[i];
+ return low;
+}
 function layout(part){
- var instrument=String(part.instrument||'piano').toLowerCase().replace(/[\s_-]/g,''),ids=[];
+ var instrument=instrumentName(part.instrument),ids=[];
  part.measures.forEach(function(m){m.voices.forEach(function(v){if(!ids.includes(v.voice))ids.push(v.voice);});});ids.sort(function(a,b){return a-b;});
  var voices=ids.map(function(id){var pitches=[];part.measures.forEach(function(m){m.voices.filter(function(v){return v.voice===id;}).forEach(function(v){v.events.forEach(function(e){(e.pitch?[e.pitch]:e.pitches||[]).forEach(function(p){pitches.push(pitch(p).midi);});});});});pitches.sort(function(a,b){return a-b;});var median=pitches.length?pitches[Math.floor(pitches.length/2)]:60;return {id:id,staff:instrument==='piano'&&ids.length>1&&median<60?2:1};});
  // A piano voice remains on the same staff for the entire piece.
@@ -71,8 +78,8 @@ function convert(score){
   xml+='<part id="P'+(pi+1)+'">';
   for(var mn=1;mn<=maximum;mn++){
    var measure=part.measures.filter(function(m){return m.number===mn;})[0],changed=measure&&measure.timeSignature&&measure.timeSignature!==currentMeter.num+'/'+currentMeter.den;if(changed)currentMeter=meter(measure.timeSignature);
-   var length=currentMeter.quarters;plan.voices.forEach(function(v){var sum=(plan.rows[mn+'/'+v.id]||[]).reduce(function(a,r){return a+r.q;},0);if(sum>length+.00001){warnings.push('Takt '+mn+' Stimme '+v.id+' ist länger als die Taktart.');length=Math.max(length,sum);}});
-   xml+='<measure number="'+mn+'">';
+   var length=measure&&Number(measure.actualDurationQuarters)>0?Number(measure.actualDurationQuarters):currentMeter.quarters;plan.voices.forEach(function(v){var sum=(plan.rows[mn+'/'+v.id]||[]).reduce(function(a,r){return a+r.q;},0);if(sum>length+.00001){warnings.push('Takt '+mn+' Stimme '+v.id+' ist länger als die Taktart.');length=Math.max(length,sum);}});
+   xml+='<measure number="'+mn+'"'+(measure&&(measure.implicit||measure.actualDurationQuarters)?' implicit="yes"':'')+'>';
    if(mn===1||changed){xml+='<attributes>';if(mn===1)xml+='<divisions>'+division+'</divisions><key><fifths>'+baseKey.fifths+'</fifths><mode>'+(baseKey.minor?'minor':'major')+'</mode></key>';xml+='<time><beats>'+currentMeter.num+'</beats><beat-type>'+currentMeter.den+'</beat-type></time>';if(mn===1){xml+='<staves>'+plan.staves+'</staves>';for(var staff=1;staff<=plan.staves;staff++){var clef=staff===2?['F',4]:plan.clef;xml+='<clef number="'+staff+'"><sign>'+clef[0]+'</sign><line>'+clef[1]+'</line></clef>';}}xml+='</attributes>';}
    if(mn===1){if(score.score.tempo&&score.score.tempo.text)xml+=textDirection(score.score.tempo.text,1,0);xml+=direction('<metronome><beat-unit>quarter</beat-unit><per-minute>'+tempo+'</per-minute></metronome>',1,0,'<sound tempo="'+tempo+'"/>');}
    (directions[mn]||[]).sort(function(a,b){return a.q-b.q;}).forEach(function(d){if(!d.clef)xml+=d.xml;});

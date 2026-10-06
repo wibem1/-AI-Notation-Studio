@@ -53,7 +53,7 @@ assert run('compact.ai.cost(tokens,compact.ai.prices("anthropic","unknown"))===n
 assert run('compact.ai.sanitize("key secret123",["secret123"])')=='key [Schlüssel entfernt]'
 # Actual application import/open functions with a FileIO / MuseScore test double.
 a=qml.index('    function isCompactResult()');b=qml.index('    Dialog {\n        id: compactImportDialog',a)
-run('''var compositionJson="",compactSourceText="",compactWarnings=[],musicalDraft="",aiAnswer="",statusText="",busy=false;
+run('''var compositionJob=null,compositionCosts=[],compositionIdea="",ideaReady=false;var compositionJson="",compactSourceText="",compactWarnings=[],musicalDraft="",aiAnswer="",statusText="",busy=false;
 var files={},opened=[],metatags={};var Qt={resolvedUrl:function(p){return "file:///tmp/"+p;}};
 var compactFile={source:"",write:function(x){files[this.source]=x;return true;},read:function(){return files[this.source];}};
 function fileUrlToLocalPath(x){return x.replace("file://","");}
@@ -84,3 +84,12 @@ for provider,payload in [('OpenAI',{'output_text':'CS1'}),('Anthropic',{'content
     run('request.status=200;request.readyState=4;request.responseText='+json.dumps(json.dumps(payload))+';request.onreadystatechange();')
     assert json.loads(run('JSON.stringify(result)'))=={'ok':True,'text':'CS1'}
 print('OpenAI, Anthropic and Google request/callback contracts OK')
+# The actual transport uses the independent provider/model/key, not the visible primary controls.
+run('function providerKey(p){return "second-secret";}var usageCalls=[];function registerUsage(p,r,m,s,o){usageCalls.push({provider:p,model:m,options:o});};provider="OpenAI";')
+run('callAI("task",function(ok,text){result={ok:ok,text:text};},"Stufe 2","format",{provider:"Google",model:"second-model",jobId:"job",maxTokens:32768});')
+assert run('request.url.indexOf("second-model")>=0')=='true'
+assert run('request.headers["x-goog-api-key"]')=='second-secret'
+run('request.status=200;request.readyState=4;request.responseText=JSON.stringify({candidates:[{content:{parts:[{text:"CS1"}]}}]});request.onreadystatechange();request.onreadystatechange();')
+assert run('usageCalls.length')=='1'
+assert run('usageCalls[0].provider')=='Google' and run('usageCalls[0].model')=='second-model'
+print('Independent stage credentials and single callback delivery OK')

@@ -3,13 +3,13 @@ const fs=require('fs'),path=require('path');
 const babel=require('@babel/core'),preset=require('@babel/preset-env');
 const dir=path.resolve(__dirname,'..'),qml=path.join(dir,'AI-Notation-Studio-App.qml');
 let source='var scope = {};\n';
-for(const file of ['compactscore.js','compactscore-musicxml.js','compactscore-costs.js']) {
+for(const file of ['compactscore.js','compactscore-musicxml.js','compactscore-costs.js','compactscore-context.js']) {
  let code=fs.readFileSync(path.join(dir,file),'utf8');
  code=code.replace(/\}\)\(typeof globalThis!==?'undefined'\?globalThis:this\);?\s*$/, '})(scope);');
  code=code.replace(/Object\.fromEntries/g,'csFromEntries').replace(/Object\.entries/g,'csEntries');
  source+=code+'\n';
 }
-source+='return { score:scope.CompactScore, xml:scope.CompactMusicXML, ai:scope.CompactAI };';
+source+='return { score:scope.CompactScore, xml:scope.CompactMusicXML, ai:scope.CompactAI, context:scope.CompactContext };';
 source=`function csEntries(o) { return Object.keys(o).map(function(k){return [k,o[k]];}); }
 function csFromEntries(a) { var o={}; a.forEach(function(e){Object.defineProperty(o,e[0],{value:e[1],enumerable:true,writable:true,configurable:true});}); return o; }
 `+source;

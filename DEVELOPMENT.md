@@ -21,12 +21,7 @@ Ab v0.7.0 wird die Entwicklung bewusst vereinfacht:
 
 ## Musikalisches Prinzip
 
-Die freie Komposition verwendet ab 0.9.0 direkt CS1 und eine lokale MusicXML-Umsetzung. Die übrigen Kompositionsfunktionen arbeiten zweistufig:
-
-1. endgültige musikalische Fassung
-2. technische MuseScore-Umsetzung
-
-Keine Vorentwurfsphase.
+Ab 0.10.0 gilt für alle Kompositionsmodi dieselbe CS1-Umsetzung. Die explizite Auswahl bestimmt den Ablauf: direkt, Idee → Komposition, vollständige Musik → Formatübertragung. Nur der Ideenmodus hält für die Bearbeitung an. Ein Auftrag erfasst Kontext, musikalische Angaben und beide Modellkonfigurationen vor dem ersten Netzwerkaufruf. Keys bleiben in Settings und werden nicht im Auftrag, im Score-Gedächtnis oder im Protokoll gespeichert.
 
 ## Loader-Architektur ab v0.7.10
 
@@ -42,6 +37,10 @@ Die App bleibt selbst ein `MuseScore`-API-Objekt, wird aber vom Host als QQuickI
 
 ## CompactScore-Laufzeit ab 0.9.0
 
-Die drei Quellmodule `compactscore.js`, `compactscore-musicxml.js` und `compactscore-costs.js` sind in die QML eingebettet. Nach Änderungen mit `NODE_PATH=<Babel-installation>/node_modules node scripts/embed-compactscore.cjs` neu erzeugen; benötigt @babel/core und @babel/preset-env (getestet mit 8.0.6). Dies ist ausschließlich ein Entwicklungsschritt. Danach die App identisch nach `versions/AI-Notation-Studio-App-0.9.0.qml` kopieren.
+Die Quellmodule `compactscore.js`, `compactscore-musicxml.js`, `compactscore-costs.js` und `compactscore-context.js` sind in die QML eingebettet. Nach Änderungen mit `NODE_PATH=<Babel-installation>/node_modules node scripts/embed-compactscore.cjs` neu erzeugen; benötigt @babel/core und @babel/preset-env (getestet mit 8.0.6). Dies ist ausschließlich ein Entwicklungsschritt. Danach die App identisch nach `versions/AI-Notation-Studio-App-0.10.0.qml` kopieren.
 
 `python tests/test_compactscore.py` benötigt PySide6 und lxml und prüft den tatsächlich eingebetteten Code mit QJSEngine, die zwei realen CS1-Beispiele gegen MusicXML 4.0 sowie die API-Anfragen und Kosten. MuseScore bleibt der notwendige praktische Endtest.
+
+## Tests 0.10.0
+
+`python tests/test_workflows.py` prüft alle 18 Kombinationen aus sechs Modi und drei Arbeitsweisen mit deterministischen Provider-Antworten. Zusätzlich werden zusammengeführte MusicXML-Partituren gegen XSD validiert, Originalnoten verglichen, Auswahlpausen, Auftakte und transponierende Instrumente geprüft. `python tests/test_ui.py` startet die echte QML-Oberfläche offscreen mit den in `tests/qml-stubs` enthaltenen API-Testobjekten und prüft das editierbare Ideenfeld. Keine Tests verwenden echte API-Keys oder erzeugen kostenpflichtige Anfragen. Die Testobjekte ersetzen keinen realen MuseScore-Praxistest.

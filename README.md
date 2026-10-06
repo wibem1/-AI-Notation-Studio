@@ -1,10 +1,24 @@
-# AI Notation Studio v0.9.0
+# AI Notation Studio v0.10.0
 
 AI Notation Studio ist ein MuseScore-Studio-Plugin für KI-gestützte Analyse, Komposition und Bearbeitung direkt an der Partitur.
 
-## Neu in 0.9.0
+## Neu in 0.10.0 – 06.10.2026
 
-Freie Komposition erzeugt direkt CompactScore CS1 mit einem KI-Aufruf. **Komposition in MuseScore öffnen** erzeugt über MusicXML eine neue Partitur. Die vorhandene Partitur bleibt erhalten. Über **CS1 / JSON importieren** können vorhandene CS1- oder AI-Notation-Mini/Maxi-Texte eingefügt werden. Analyse, zusätzliche Stimme und die übrigen Bearbeitungsmodi behalten ihre bisherigen Abläufe.
+Alle sechs Kompositionsmodi verwenden CompactScore CS1. Im Feld **Arbeitsweise** stehen drei Abläufe zur Wahl:
+
+| Arbeitsweise | Erste Stufe | Zweite Stufe |
+|---|---|---|
+| Direkt komponieren | Fertige Komposition in CS1 | entfällt |
+| Idee entwickeln → komponieren | Kurze Idee, im Plugin editierbar | Erst nach **Jetzt komponieren**: vollständige Komposition in CS1 |
+| Musik zuerst → nach CS1 übertragen | Vollständig ausgearbeitete musikalische Fassung | Automatische, möglichst unveränderte Übertragung nach CS1 |
+
+Unter **Technisches** gilt der bisherige Anbieter mit seinem Modell für Direkt, Stufe 1, Analyse und Chat. Für zweistufige Abläufe kann **Dasselbe wie Stufe 1** deaktiviert und ein anderer Anbieter mit eigenem Modell für Stufe 2 gewählt werden. Beide Stufen verwenden die bereits gespeicherten Provider-Keys. Fehlt der zweite Key, wird vor dem ersten kostenpflichtigen Aufruf darauf hingewiesen. Der Key wird über die vorhandenen Anbieter-/Key-Felder eingerichtet. Arbeitsweise und Modellwahl werden gespeichert.
+
+Nach einem Auftrag zeigen die Kostenzeilen Anbieter, Modell, Betrag je Aufruf sowie die Summe des Auftrags. Tokens, Cache-Nutzung, Thinking-Tokens und Laufzeiten je Stufe stehen in der Diagnose. Die erste Ausgabe wird dem zweiten Modell als Eingabe mitgegeben und entsprechend erneut berechnet. Modelle werden während des Auftrags festgehalten; ein Wechsel der sichtbaren Felder verändert einen laufenden Auftrag nicht.
+
+**Fertige Fassung in MuseScore öffnen** überträgt die Musik einschließlich Ausdruckszeichen per MusicXML. Freie Komposition öffnet ein neues Stück. Die übrigen Modi öffnen eine kombinierte Kopie der beim Auftragsbeginn gesicherten Ausgangspartitur: neue Stimme, Motiv, Variante und Bearbeitung als zusätzliche Parts am Auswahlbeginn; Fortsetzung am Partiturende in denselben Parts. Das Original bleibt erhalten. Die Kopie kann durch MuseScores MusicXML-Import ein anderes Layout erhalten. Den geöffneten Score anschließend speichern.
+
+Die bearbeitete Idee, fertige musikalische Fassung, Stufenmodelle und Kosten gehören zum Score-Gedächtnis. Vorhandene ältere technische JSON-Ergebnisse bleiben einfügbar; neue Aufträge verwenden ausschließlich CS1. Über **CS1 / JSON importieren** lassen sich CS1 sowie AI-Notation-Mini/Maxi-Texte laden. Analyse und Chat behalten ihre unabhängigen Abläufe.
 
 Die drei Anbieter verwenden die vorhandenen gespeicherten API-Keys. Kosten werden pro Aufruf und Sitzung als geschätzte USD-Beträge aus dem gemeldeten Tokenverbrauch angezeigt. Unbekannte Modelle oder fehlende Nutzungsdaten werden als nicht berechenbar ausgewiesen. Thinking-Tokens werden bei Anthropic nicht doppelt abgerechnet; Cache-Tarife werden berücksichtigt. Tarife und ihre Quellen stehen in `compactscore-costs.js` und in der Diagnose.
 
@@ -30,12 +44,7 @@ Installation über **Update prüfen → Update installieren**. Der bestehende Ho
 
 ## Musikalische Architektur
 
-Kompositionsfunktionen arbeiten zweistufig:
-
-1. **Musikalische Fassung** — vollständig komponiert, ohne JSON-/Tick-Zwang.
-2. **Technische Umsetzung** — Übertragung der fertigen Musik in MuseScore-Daten.
-
-Es gibt keine Vorentwurfsphase.
+Alle Arbeitsweisen führen zu CS1 und derselben lokalen MusicXML-Umsetzung. Nur „Idee entwickeln“ enthält eine bewusst gewählte Ideenphase und wartet auf den Nutzer. Bei „Musik zuerst“ ist die erste Ausgabe bereits die fertige Komposition, kein Vorentwurf. Eine höhere musikalische Qualität durch zusätzliche Aufrufe wird nicht vorausgesetzt.
 
 ## Update
 
@@ -43,7 +52,7 @@ Im Plugin genügt künftig:
 
 1. **Update prüfen**
 2. **Update installieren**
-3. MuseScore neu starten
+3. Die neue Live-App wird geladen; ein Neustart ist normalerweise nicht nötig.
 
 Es gibt nur einen Updateweg über den aktuellen Stand auf GitHub/`main`.
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0 – 06.10.2026
+
+- Drei gespeicherte Arbeitsweisen für alle Kompositionsmodi: direkt, editierbare Idee mit bewusster Freigabe, vollständige Musik mit automatischer CS1-Übertragung.
+- Getrennte Anbieter und Modelle je Stufe; vorhandene Keys werden weiterverwendet und vor dem Auftrag geprüft.
+- Kosten pro Stufe, Auftragssumme und vollständige Stufendaten in der Diagnose.
+- Alle sechs Modi verwenden CS1, einschließlich Dynamik, Artikulationen, Bögen und Pedal.
+- Kontextaufträge sichern das Original und öffnen über MusicXML eine kombinierte Kopie. Auswahlposition, Taktartwechsel, Auftakte, Klaviersysteme und Instrumententransposition werden lokal berücksichtigt.
+- Idee und musikalische Erstfassung bleiben bei Fehlern der zweiten Stufe erhalten; Formatübertragung kann wiederholt werden.
+- Oberfläche scrollbar, damit Idee, Ergebnis und Modellfelder in kleineren Fenstern erreichbar bleiben.
+
+
 ## 0.9.0 – CompactScore CS1
 
 - Freie Komposition direkt in CS1 statt zweier KI-Aufrufe.

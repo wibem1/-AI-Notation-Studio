@@ -143,3 +143,7 @@ Für das Score-Gedächtnis werden ausschließlich die dokumentierten MuseScore-A
 `Q_INVOKABLE Score* readScore(const QString& name, bool noninteractive = false)` ist in MuseScore v4.6.5 (`src/engraving/api/v1/qmlpluginapi.h`) vorhanden. Die CS1-Übertragung schreibt mit dem vorhandenen FileIO-Modul eine `.musicxml` und öffnet sie über diese Methode. Keine Auswahl-Löschung oder Änderung des Ausgangsscores. `Score.setMetaTag` speichert anschließend das CS1-Original. Der bestehende API-v1-Host wird beibehalten.
 
 QML-Syntax und Start mit Qt 6.8.3 geprüft (MuseScore/FileIO-Testmodule); dies ersetzt keinen realen MuseScore-Importtest. Die MusicXML-Daten sind gegen das W3C-4.0-Schema geprüft.
+
+## v0.10.0 – Kontext sichern und als Kopie öffnen
+
+MuseScore v4.6.5, `src/engraving/api/v1/qmlpluginapi.h`, erneut geprüft: `Q_INVOKABLE bool writeScore(apiv1::Score*, const QString& name, const QString& ext)` und `Q_INVOKABLE apiv1::Score* readScore(const QString& name, bool noninteractive = false)` sind vorhanden. Kontextaufträge exportieren über `writeScore(curScore, path, "musicxml")`; die lokale XML-Zusammenführung erzeugt eine neue Partitur für `readScore`. Das Original wird nicht durch Cursor-Schreibzugriffe verändert. Score-Metadaten und API-Keys verwenden die bisherigen APIs. Kein zusätzlicher Laufzeitimport außerhalb der selbstständigen App-QML.

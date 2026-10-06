@@ -137,3 +137,9 @@ Die frühere Strategie mit künstlicher Bereichsauswahl plus `time-delete` wurde
 ## v0.7.6 – Gedächtnis
 
 Für das Score-Gedächtnis werden ausschließlich die dokumentierten MuseScore-API-v1-Methoden `Score.metaTag(tag)` und `Score.setMetaTag(tag, value)` verwendet. Diese sind im aktuellen MuseScore-4.7-Quellcode als Q_INVOKABLE exponiert. Metadaten werden beim Speichern des Scores mitgeschrieben. Das generelle Gedächtnis verwendet weiterhin QML `Settings` und ist damit score-unabhängig.
+
+## v0.9.0 – native MusicXML-Übertragung
+
+`Q_INVOKABLE Score* readScore(const QString& name, bool noninteractive = false)` ist in MuseScore v4.6.5 (`src/engraving/api/v1/qmlpluginapi.h`) vorhanden. Die CS1-Übertragung schreibt mit dem vorhandenen FileIO-Modul eine `.musicxml` und öffnet sie über diese Methode. Keine Auswahl-Löschung oder Änderung des Ausgangsscores. `Score.setMetaTag` speichert anschließend das CS1-Original. Der bestehende API-v1-Host wird beibehalten.
+
+QML-Syntax und Start mit Qt 6.8.3 geprüft (MuseScore/FileIO-Testmodule); dies ersetzt keinen realen MuseScore-Importtest. Die MusicXML-Daten sind gegen das W3C-4.0-Schema geprüft.

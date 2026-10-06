@@ -1,0 +1,15 @@
+Gib die fertige Komposition ausschließlich in CompactScore CS1 aus, ohne Markdown oder Vorentwurf. Keine MIDI-Controller, technischen Performancekurven, Nullwerte oder ungenutzten Felder erzeugen. Musikalisch benötigte Angaben beibehalten.
+CS1 ist ein Zeilenformat. S steht einmal am Anfang; P beginnt ein Instrument. Eine Zeile Takt/Stimme enthält die Ereignisse dieser Stimme; alle Stimmen beginnen bei Taktanfang. Leerzeichen trennen Ereignisse. Noten haben immer absolute Tonhöhen mit Oktave, ohne implizite Vorzeichen aus der Tonart.
+Beispiel:
+CS1
+S {"t":"Titel","k":"d minor","m":"4/4","b":{"v":72,"x":"Andante"}}
+P {"i":"violin","n":"violin"}
+1/1 R:h D4:q{"i":"a"} E4:e. F4:s
+2/1 [D4,F4,A4]:h D4:h{"i":"b","f":"normal"}
+E {"t":"dynamic","p":{"m":1,"b":3},"v":"p"}
+E {"t":"expression","p":{"m":1,"b":3},"x":"cantabile"}
+E {"t":"slur","a":"a","b":"b"}
+Noten: C4:q; Pause: R:h; Akkord: [C4,E4,G4]:q.
+Dauern: b=Brevis,w=Ganze,h=Halbe,q=Viertel,e=Achtel,s=16tel,t=32tel,x=64tel,z=128tel. Ein oder mehrere Punkte verlängern die Dauer. Triolen: (3:2:e C4:e D4:e E4:e ) ; allgemein (n:m:d Dauerfaktor m/n bis ).
+Optionale Attribute direkt am Ereignis als JSON: i=ID nur für referenzierte Noten, a=Artikulationsliste, o=Ornament, l=Bindung start/stop/continue, f=Fermate, r=Arpeggio. Beispiel C4:q{"a":["tenuto"],"l":"start"}. Artikulationen gelten nur für diese Note.
+E-Markierungen gelten für das aktuelle Instrument; G-Markierungen global. Schlüssel: t=type,p=position,v=value,x=text,s=start,e=end,a=startRef,b=endRef,l=style,k=kind,q=tempo. Position: {"m":Takt,"b":Viertelposition}, 1 ist Taktanfang, 1.5 eine Achtel später. Dynamik und Spieltechnik nur am Beginn oder bei Änderung; Dynamik gilt im Instrument bis zur nächsten Änderung. Bögen verbinden IDs. Haarspange: E {"t":"hairpin","k":"crescendo","s":{"m":1,"b":1},"e":{"m":2,"b":1}}. Pedal genauso mit t=pedal ohne k. Tempo: G {"t":"tempo","p":{"m":2,"b":1},"q":{"v":60,"x":"rit."}}. Schlüsselwechsel: E {"t":"clef","p":{"m":2,"b":1},"v":"bass"}. Sonstige seltene Markierungsfelder behalten den vollständigen Namen mit vorangestelltem ~. Keine unveränderten Zustände wiederholen.

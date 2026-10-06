@@ -1,6 +1,16 @@
-# AI Notation Studio v0.7.0
+# AI Notation Studio v0.9.0
 
 AI Notation Studio ist ein MuseScore-Studio-Plugin für KI-gestützte Analyse, Komposition und Bearbeitung direkt an der Partitur.
+
+## Neu in 0.9.0
+
+Freie Komposition erzeugt direkt CompactScore CS1 mit einem KI-Aufruf. **Komposition in MuseScore öffnen** erzeugt über MusicXML eine neue Partitur. Die vorhandene Partitur bleibt erhalten. Über **CS1 / JSON importieren** können vorhandene CS1- oder AI-Notation-Mini/Maxi-Texte eingefügt werden. Analyse, zusätzliche Stimme und die übrigen Bearbeitungsmodi behalten ihre bisherigen Abläufe.
+
+Die drei Anbieter verwenden die vorhandenen gespeicherten API-Keys. Kosten werden pro Aufruf und Sitzung als geschätzte USD-Beträge aus dem gemeldeten Tokenverbrauch angezeigt. Unbekannte Modelle oder fehlende Nutzungsdaten werden als nicht berechenbar ausgewiesen. Thinking-Tokens werden bei Anthropic nicht doppelt abgerechnet; Cache-Tarife werden berücksichtigt. Tarife und ihre Quellen stehen in `compactscore-costs.js` und in der Diagnose.
+
+MusicXML übernimmt unter anderem Stimmen, Akkorde, Pausen, Punktierungen, Tuplets, Dynamik, Artikulationen, Bögen, Haltebögen, Fermaten, Pedal und Tempo. Nicht umsetzbare seltene Markierungen erscheinen als Hinweise. Das vollständige CS1 bleibt als `.cs` neben der erzeugten `.musicxml` im Pluginverzeichnis und im Score-Metadatum `AI-Notation-Studio-Source-CS1` erhalten. Den geöffneten Score anschließend speichern.
+
+Installation über **Update prüfen → Update installieren**. Der bestehende Host bleibt unverändert. Der gesamte Laufzeitcode ist in der App-QML enthalten; es sind keine zusätzlichen JS-Dateien zur Installation erforderlich.
 
 ## Aktuelle Funktionen
 

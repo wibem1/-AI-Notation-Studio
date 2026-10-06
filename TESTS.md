@@ -106,3 +106,9 @@
 - [ ] Provider/Modell/API-Key bleiben erhalten.
 - [ ] Schließen des Plugin-Fensters beendet MuseScore nicht.
 - [ ] Nach einem späteren MuseScore-Neustart lädt der Host die gespeicherte Live-App wieder.
+
+## 0.9.0 CompactScore
+
+Automatisch geprüft: Qt-QJSEngine-Roundtrip, vollständige 16 Takte der Elegie und des Herbstlichen Abendgesangs, feste Klavier-Stimmenverteilung, Tuplets, Bögen, Atemzeichen, Pedal, Tempo, MusicXML-4.0-XSD, Erhalt der Quelldaten, Import-/Öffnen-Funktionen mit FileIO/MuseScore-Testobjekten, drei Provider-Anfragen, Mehrblock-Antworten, Tokenlimit, Schlüsselmaskierung und 0,04792 USD für 1245/4543 Anthropic-Tokens inklusive 2969 bereits enthaltener Thinking-Tokens. QML-Start und Syntax geprüft.
+
+Praktisch noch zu prüfen: Update auf 0.9.0, echte freie Komposition mit gespeichertem Key, „Komposition in MuseScore öffnen“, Layout/Wiedergabe/Partiturspeicherung; Import der Elegie und des Herbstlichen Abendgesangs. Besonders Pedalwechsel, Atemzeichen und Klavierstimmen in der verwendeten MuseScore-Version kontrollieren.

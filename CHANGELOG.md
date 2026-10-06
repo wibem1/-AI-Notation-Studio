@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0 – CompactScore CS1
+
+- Freie Komposition direkt in CS1 statt zweier KI-Aufrufe.
+- Import von CS1 und Mini/Maxi-JSON; neue MuseScore-Partitur über MusicXML.
+- Ausdruckszeichen, Mehrstimmigkeit und Tuplets als native Notation.
+- Original-CS1 als separate Datei und Score-Metadatum.
+- Kosten pro Aufruf und Sitzung, Cache-Nutzung und Thinking-Token-Anzeige in der Diagnose.
+- Alle Textblöcke der drei Anbieter werden gelesen; abgeschnittene Antworten bleiben zur Diagnose erhalten und werden nicht importiert.
+- Live-App 0.9.0 als selbstständige QML; Host und andere Bearbeitungsmodi bleiben erhalten.
+
+
 ## 0.7.0
 
 Neue Funktionen:

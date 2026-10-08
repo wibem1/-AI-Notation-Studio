@@ -126,3 +126,7 @@ Praxistest in MuseScore noch erforderlich: Update auf 0.10.0; Idee mit Modell A 
 ## 0.10.4 – Scrollen
 
 Der UI-Test prüft den Haupt-Flickable mit überhohem Inhalt, einen echten Mausklick auf die vertikale Scrollleiste sowie ein Mausradereignis. Beide bewegen contentY. Der Loaderstart wird zusätzlich unter Qt 5 geprüft.
+
+## 0.10.5 – Updatefunktion
+
+`python tests/test_update.py` führt die echten QML-Updaterfunktionen im Qt-JS-Interpreter mit deterministischen HTTP-Antworten aus. Geprüft: einmalige Antwortverarbeitung, neuer/gleicher Versionsstand, Schreiben und Lesen unter Windows-Dateipfaden, Aktivierungsquelle sowie HTTP-Fehler mit Rücksetzung des Beschäftigtzustands. Kein externer Netzaufruf.

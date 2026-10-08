@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.5 – 08.10.2026
+
+- Updateprüfung repariert: fehlende lokale finished-Variable verhindert nicht mehr die Verarbeitung der HTTP-Antwort. Starter unverändert.
+- Updateprüfung, Versionsvergleich und Schreiben/Prüfen/Aktivieren einer versionierten App werden gezielt mit deterministischen HTTP-/FileIO-Antworten getestet.
+
 ## 0.10.4 – 08.10.2026 / Starter 0.7.14
 
 - Hauptbereich als explizit interaktiven Flickable mit dauerhaft sichtbarer vertikaler Scrollleiste umgesetzt. Inhaltsbreite reserviert Platz für die Scrollleiste.

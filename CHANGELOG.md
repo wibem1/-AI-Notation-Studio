@@ -1,5 +1,9 @@
 # Changelog
 
+## Starter 0.7.18 – 08.10.2026 / App 0.10.11
+
+- Mitgeliefertes Bundle im Starter auf 0.10.11 aktualisiert. Der Starter liest weiterhin Active.json frisch vom Datenträger. Für den Wechsel vom alten Settings-Starter ist ein manueller Austausch des Starters erforderlich; reine App-Updates ersetzen ihn nicht.
+
 ## 0.10.11 – 08.10.2026
 
 - Nachkontrolle der dauerhaften Aktivierung vergleicht JSON-Werte statt den Rohtext. MuseScores FileIO.read hängt zusätzliche Zeilenumbrüche an; dadurch hatte 0.10.10 auch nach erfolgreichem Schreiben einen Fehler gemeldet.

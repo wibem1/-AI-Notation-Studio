@@ -10,7 +10,7 @@ Die Listen verwenden die dokumentierten Anbieter-Endpunkte: [OpenAI](https://dev
 
 ## Dauerhafte Updates ab 0.10.9
 
-Starter 0.7.17 und die Datei **AI-Notation-Studio-App-0.10.9.qml** einmal im Pluginordner installieren und MuseScore neu starten. Der Starter liest bei jedem Öffnen die lokal gespeicherte Datei **AI-Notation-Studio-Active.json**; sie benennt ausschließlich die geprüfte aktive App-Version. Eine erfolgreiche App-Initialisierung schreibt und prüft diese Auswahl. Die Startversion wird nicht mehr über mehrere Settings-Instanzen koordiniert. Die Provider-Keys bleiben im bisherigen Settings-Bereich.
+Starter 0.7.18 und die Datei **AI-Notation-Studio-App-0.10.11.qml** einmal im Pluginordner installieren und MuseScore neu starten. Der Starter liest bei jedem Öffnen die lokal gespeicherte Datei **AI-Notation-Studio-Active.json**; sie benennt ausschließlich die geprüfte aktive App-Version. Eine erfolgreiche App-Initialisierung schreibt und prüft diese Auswahl. Die Startversion wird nicht mehr über mehrere Settings-Instanzen koordiniert. Die Provider-Keys bleiben im bisherigen Settings-Bereich.
 
 Der Neustarttest installiert per echter QML-Updatefunktion eine neuere Datei, zerstört und öffnet das Plugin im selben Engine-Cache und startet zusätzlich einen neuen Prozess. In beiden Fällen wird die neue Version geladen. Ungültige Datensätze und fehlende Dateien fallen auf das mitgelieferte Bundle zurück.
 

@@ -69,11 +69,11 @@ if '--qt5' not in sys.argv:
  assert shot.save(str(Path(config.name)/'startup-fallback.png'))
 # The complete actual app must load through the host, not only as a standalone root.
 url=QUrl.fromLocalFile(str(ROOT/'AI-Notation-Studio-App.qml')).toString()
-js('host.activateHotApp('+json.dumps(url)+',"0.10.7")')
+js('host.activateHotApp('+json.dumps(url)+',"0.10.8")')
 for i in range(30):app.processEvents()
 assert r.property('hotAppActive'),r.property('updateStatus')
 assert r.property('hotAppRequested')
 assert r.property('width')==v.width() and r.property('height')==v.height(),(r.property('width'),r.property('height'),v.width(),v.height())
 if '--qt5' not in sys.argv:assert not v.grabWindow().isNull()
-assert any(x.property('version')=='0.10.7' and x.property('title')=='AI Notation Studio – interne App (nicht starten)' for x in r.findChildren(QObject))
+assert any(x.property('version')=='0.10.8' and x.property('title')=='AI Notation Studio – interne App (nicht starten)' for x in r.findChildren(QObject))
 print('Host rendered, Windows/UNC paths and missing-app fallback OK; full app loaded:',qVersion())

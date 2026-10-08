@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.8 – 08.10.2026
+
+- Scrollbereich an die tatsächliche native Fensterhöhe gebunden, auch wenn MuseScores eingebetteter Elternbereich größer bleibt.
+- Fehler mit unverändertem Analysemodus nachgestellt: 900 hoher Elternbereich, 500 hohes Fenster, 864 hoher Flickable und 850 hoher Inhalt; dadurch war Scrollen unnötig aus Sicht des Flickable, obwohl der Inhalt abgeschnitten war. Neue tatsächliche Scrollhöhe ist 464.
+- Starter unverändert; Installation über eingebautes Live-Update.
+
 ## 0.10.7 – 08.10.2026 / Starter 0.7.16
 
 - Fensterhöhe und -breite anhand des verfügbaren Bildschirms begrenzt; Pluginobjekte folgen der Größe ihres Elternfensters. Dadurch bleibt die Scrollleiste auch bei Windows-Skalierung innerhalb des Fensters.

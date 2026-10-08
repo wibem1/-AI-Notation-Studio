@@ -134,3 +134,7 @@ Der UI-Test prüft den Haupt-Flickable mit überhohem Inhalt, einen echten Mausk
 ## 0.10.7 – Bildschirm und Fenstergröße
 
 Der Hosttest prüft, dass die Anfangsgröße unterhalb der verfügbaren Bildschirmgröße bleibt. Mit QT_SCALE_FACTOR=1.5 wird zusätzlich der Start bei Skalierung geprüft. Der UI-Test läuft nun auch mit --qt5 und prüft eine verkleinerte Fensterhöhe (500), die zugehörige tatsächliche Scrollbereichhöhe und die Erreichbarkeit des Inhaltsendes.
+
+## 0.10.8 – Tatsächlich beschnittene MuseScore-Einbettung
+
+`python tests/test_clipped_window.py` erstellt einen festen 900 hohen Plugin-Elternbereich in einem 500 hohen nativen Fenster. Im unveränderten Analysemodus reproduziert Qt 6 an 0.10.7 den Fall: 850 hoher Inhalt passt in den 864 hohen Flickable, wird aber vom Fenster abgeschnitten. Auch Qt 5 reproduziert den übergroßen Viewport, mit anderen Stilmaßen. Der neue Code begrenzt den Flickable auf 464; Mausrad, Scrollleistenklick, Inhaltsende und Verkleinerung des tatsächlichen Fensters auf 400 werden unter beiden Qt-Versionen geprüft.

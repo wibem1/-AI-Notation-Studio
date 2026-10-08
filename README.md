@@ -1,6 +1,10 @@
-# AI Notation Studio v0.10.2
+# AI Notation Studio v0.10.3
 
 AI Notation Studio ist ein MuseScore-Studio-Plugin für KI-gestützte Analyse, Komposition und Bearbeitung direkt an der Partitur.
+
+## Einträge im Pluginmanager
+
+**AI Notation Studio** ist der einzige zu aktivierende Starter. **AI Notation Studio – interne App (nicht starten)** gehört dazu und bleibt im Pluginmanager deaktiviert. Beide QML-Dateien müssen im selben Ordner liegen. Ab 0.10.3 haben die Einträge unterschiedliche Namen.
 
 ## Startkorrektur 0.10.2 – 08.10.2026 / Starter 0.7.12
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.3 – 08.10.2026 / Starter 0.7.13
+
+- Unterschiedliche Namen im Pluginmanager: AI Notation Studio und AI Notation Studio – interne App (nicht starten). Nur den Starter aktivieren.
+
 ## 0.10.2 – 08.10.2026 / Starter 0.7.12
 
 - Minimaler Starter ohne Controls-/Labs-Import; sichtbare QML-Fehler mit Dateipfad statt unsichtbarer Konsolenausgabe.

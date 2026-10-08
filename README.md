@@ -1,8 +1,16 @@
-# AI Notation Studio v0.10.0
+# AI Notation Studio v0.10.1
 
 AI Notation Studio ist ein MuseScore-Studio-Plugin für KI-gestützte Analyse, Komposition und Bearbeitung direkt an der Partitur.
 
-## Neu in 0.10.0 – 06.10.2026
+## Windows-Startkorrektur 0.10.1 – 08.10.2026
+
+Der Host `AI-Notation-Studio.qml` ist auf 0.7.11 aktualisiert. Der fehlende explizite Settings-Import konnte bereits den Hoststart verhindern. Windows-Laufwerks- und UNC-Pfade werden korrekt zwischen QML-URLs und lokalen FileIO-Pfaden umgewandelt. Beim Laden bleibt die vorhandene Oberfläche sichtbar, bis die App bereit ist; Fehler stellen die Oberfläche wieder her. Eine mitgelieferte `AI-Notation-Studio-App.qml` wird beim Start erkannt. Eine App lädt keine ältere gespeicherte Fassung über sich selbst.
+
+Bei leerem Fenster kann der eingebaute Updater nicht bedient werden. MuseScore vollständig schließen und im vorhandenen Pluginordner `AI-Notation-Studio.qml` sowie `AI-Notation-Studio-App.qml` durch die aktuellen Dateien ersetzen. Die Dateien müssen im selben Ordner liegen. Anschließend MuseScore neu starten und das Plugin öffnen. Keys und Score-Gedächtnis bleiben erhalten. Der weitere Updateweg bleibt die eingebaute Updatefunktion.
+
+Host und komplette App wurden gemeinsam unter Qt 5.15 und Qt 6.8 mit MuseScore-API-Testobjekten gestartet; Windows-Pfade und Wiederherstellung geprüft. Ein echter Windows-11-MuseScore-Test steht noch aus.
+
+## Arbeitsweisen ab 0.10.0 – 06.10.2026
 
 Alle sechs Kompositionsmodi verwenden CompactScore CS1. Im Feld **Arbeitsweise** stehen drei Abläufe zur Wahl:
 

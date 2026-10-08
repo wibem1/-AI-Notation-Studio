@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.1 – 08.10.2026 / Host 0.7.11
+
+- Fehlenden Qt.labs.settings-Import im Host ergänzt; alter Startfehler unter Qt 5 und 6 reproduziert.
+- Windows-Laufwerksbuchstaben, Leerzeichen, Unicode, UNC und lokale File-URLs korrekt behandelt; Updater schreibt lokale Pfade.
+- Loader zeigt die App erst nach erfolgreichem Start, aktiviert keine alte Quelle vor dem neuen Ziel und stellt bei Fehlern eine bedienbare Oberfläche wieder her.
+- Mitgelieferte App wird beim Hoststart erkannt; ältere App-Versionen werden nicht über die aktuelle App geladen.
+- Host-/App-Integration zusätzlich zu den bisherigen Standalone-Tests geprüft.
+
+
 ## 0.10.0 – 06.10.2026
 
 - Drei gespeicherte Arbeitsweisen für alle Kompositionsmodi: direkt, editierbare Idee mit bewusster Freigabe, vollständige Musik mit automatischer CS1-Übertragung.

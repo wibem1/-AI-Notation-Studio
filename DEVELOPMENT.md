@@ -44,3 +44,7 @@ Die Quellmodule `compactscore.js`, `compactscore-musicxml.js`, `compactscore-cos
 ## Tests 0.10.0
 
 `python tests/test_workflows.py` prüft alle 18 Kombinationen aus sechs Modi und drei Arbeitsweisen mit deterministischen Provider-Antworten. Zusätzlich werden zusammengeführte MusicXML-Partituren gegen XSD validiert, Originalnoten verglichen, Auswahlpausen, Auftakte und transponierende Instrumente geprüft. `python tests/test_ui.py` startet die echte QML-Oberfläche offscreen mit den in `tests/qml-stubs` enthaltenen API-Testobjekten und prüft das editierbare Ideenfeld. Keine Tests verwenden echte API-Keys oder erzeugen kostenpflichtige Anfragen. Die Testobjekte ersetzen keinen realen MuseScore-Praxistest.
+
+## Hosttest ab 0.10.1
+
+Der Host 0.7.11 importiert Qt.labs.settings ausdrücklich. Bei Loader-Aktivierungen wird zuerst die alte Quelle entfernt, dann das neue Ziel gesetzt und zuletzt der Loader aktiviert. Fehler deaktivieren den Loader über Qt.callLater, um eine Rückkopplung während der active-Binding-Auswertung zu vermeiden. Beide QML-Dateien verwenden identische Windows-/UNC-URL-Konvertierung. Die App-Snapshots bleiben selbstständig; der Host erkennt optional die mitgelieferte aktuelle App. Der neue Integrationstest startet Host und App unter Qt 5 und 6; reine App-Standalone-Tests hätten den bisherigen Hostfehler nicht gefunden.

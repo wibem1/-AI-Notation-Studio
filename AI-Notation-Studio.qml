@@ -3,12 +3,13 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.1
 import MuseScore 3.0
 import FileIO 3.0
+import Qt.labs.settings 1.1
 
 MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "KI-Kompositionswerkstatt für markierte Passagen in MuseScore Studio"
-    version: "0.7.10"
+    version: "0.7.11"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -47,6 +48,8 @@ MuseScore {
     property bool restoringMemory: false
     property bool technicalExpanded: false
     property bool hotAppActive: false
+    property bool hotAppRequested: false
+    property bool probingBundledApp: false
     property string hotAppVersion: ""
     property bool infoOpen: false
 
@@ -78,6 +81,7 @@ MuseScore {
     FileIO {
         id: updaterFile
         onError: function(msg) {
+            if (probingBundledApp) return
             updateStatus = "Update-Datei konnte nicht geschrieben werden: " + msg
         }
     }
@@ -228,10 +232,29 @@ MuseScore {
 
     function fileUrlToLocalPath(urlText) {
         var s = String(urlText || "")
-        if (s.indexOf("file://") !== 0)
-            return s
-        s = s.replace(/^file:\/\//, "")
+        if (!/^file:/i.test(s)) return s.replace(/\\/g, "/")
+        s = s.substring(5).replace(/\\/g, "/")
+        if (/^\/\/localhost\//i.test(s)) s = s.substring(11)
+        else if (s.indexOf("///") === 0) s = s.substring(2)
+        else if (/^\/\/[A-Za-z]:\//.test(s)) s = s.substring(2)
+        if (/^\/[A-Za-z]:\//.test(s)) s = s.substring(1)
         try { s = decodeURIComponent(s) } catch (ignoreDecode) {}
+        return s
+    }
+
+    function localPathToFileUrl(pathText) {
+        var s = String(pathText || "").replace(/\\/g, "/")
+        var escaped = encodeURI(s).replace(/#/g, "%23").replace(/\?/g, "%3F")
+        if (/^[A-Za-z]:\//.test(s)) return "file:///" + escaped
+        if (s.indexOf("//") === 0) return "file:" + escaped
+        if (s.indexOf("/") === 0) return "file://" + escaped
+        return String(Qt.resolvedUrl(s))
+    }
+
+    function normalizedAppUrl(sourceUrl) {
+        var s = String(sourceUrl || "")
+        if (/^file:/i.test(s)) return localPathToFileUrl(fileUrlToLocalPath(s))
+        if (/^[A-Za-z]:[\\/]/.test(s) || /^[\\/]/.test(s)) return localPathToFileUrl(s)
         return s
     }
 
@@ -285,7 +308,7 @@ MuseScore {
                     return
                 }
 
-                updaterFile.source = hotTarget
+                updaterFile.source = fileUrlToLocalPath(hotTarget)
                 var hotOk = updaterFile.write(updateSourceText)
                 if (!hotOk) {
                     updateStatus = "Live-Update fehlgeschlagen: App-Datei konnte nicht geschrieben werden."
@@ -366,15 +389,32 @@ MuseScore {
             return false
         }
 
+        sourceUrl = normalizedAppUrl(sourceUrl)
         settings.activeHotAppSource = sourceUrl
         settings.activeHotAppVersion = versionText || ""
         hotAppVersion = versionText || ""
-        hotAppActive = true
+        hotAppActive = false
+        hotAppRequested = false
+        updateStatus = "Live-App wird geladen …"
 
         // Andere URL => neue QML-Komponente statt MuseScores gecachter Plugin-Komponente.
         hotAppLoader.source = ""
         hotAppLoader.source = sourceUrl
+        hotAppRequested = true
         return true
+    }
+
+    function restoreAfterAppFailure(message) {
+        hotAppActive = false
+        updateStatus = message
+        var failedSource = String(hotAppLoader.source)
+        // Defer deactivation: Loader can report an error while its active binding is evaluated.
+        Qt.callLater(function() {
+            if (String(hotAppLoader.source) !== failedSource) return
+            hotAppRequested = false
+            settings.activeHotAppSource = ""
+            settings.activeHotAppVersion = ""
+        })
     }
 
     function clearHotAppActivation() {
@@ -382,6 +422,7 @@ MuseScore {
         settings.activeHotAppVersion = ""
         hotAppVersion = ""
         hotAppActive = false
+        hotAppRequested = false
         hotAppLoader.source = ""
     }
 
@@ -694,7 +735,7 @@ MuseScore {
 
             var data = {
                 format: "AI-Notation-Studio-Selection",
-                version: "0.7.10",
+                version: "0.7.11",
                 scoreTitle: curScore.title || "",
                 isRange: selection.isRange ? true : false,
                 elementCount: count,
@@ -2085,7 +2126,23 @@ MuseScore {
         })
     }
 
+    function tryBundledApp() {
+        var sourceUrl = String(Qt.resolvedUrl("AI-Notation-Studio-App.qml"))
+        var text = ""
+        probingBundledApp = true
+        try {
+            updaterFile.source = fileUrlToLocalPath(sourceUrl)
+            text = String(updaterFile.read())
+        } catch (e) { text = "" }
+        probingBundledApp = false
+        if (!validateUpdateSource(text)) return false
+        var versionText = extractPluginVersion(text)
+        if (settings.activeHotAppVersion && compareVersions(versionText, settings.activeHotAppVersion) < 0) return false
+        return activateHotApp(sourceUrl, versionText)
+    }
+
     onRun: {
+        if (tryBundledApp()) return
         if (settings.activeHotAppSource && settings.activeHotAppSource !== "") {
             if (activateHotApp(settings.activeHotAppSource, settings.activeHotAppVersion))
                 return
@@ -2242,7 +2299,7 @@ MuseScore {
                 selectByMouse: true
                 font.pixelSize: 15
                 text:
-                    "AI Notation Studio v0.7.10\n\n" +
+                    "AI Notation Studio v0.7.11\n\n" +
                     "KOMPOSITION / ANALYSE\n" +
                     "Dieser Bereich führt den eigentlichen musikalischen Auftrag aus. Der gewählte Modus bestimmt, ob analysiert, eine neue Stimme komponiert, frei komponiert, fortgesetzt, ein Motiv entwickelt, eine Variante erzeugt oder neu instrumentiert wird.\n\n" +
                     "PARTITUR-CHAT\n" +
@@ -2258,7 +2315,7 @@ MuseScore {
                     "GEDÄCHTNIS\n" +
                     "Es gibt zwei getrennte Ebenen. Das generelle Gedächtnis enthält allgemeine Arbeitsvorlieben und Vorbelegungen der Felder. Das Score-Gedächtnis gehört ausschließlich zum geöffneten Score und enthält Chat, letzten Auftrag und Arbeitsstände.\n\n" +
                     "UPDATE\n" +
-                    "v0.7.10 ist die Übergangsversion für Live-Updates. Künftige App-Versionen werden als eigene QML-Dateien geladen, damit MuseScores QML-Cache keinen Neustart mehr erzwingt."
+                    "v0.7.11 ist die Übergangsversion für Live-Updates. Künftige App-Versionen werden als eigene QML-Dateien geladen, damit MuseScores QML-Cache keinen Neustart mehr erzwingt."
             }
         }
     }
@@ -2278,7 +2335,7 @@ MuseScore {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "AI Notation Studio · v0.7.10"
+                    text: "AI Notation Studio · v0.7.11"
                     color: "white"
                     font.pixelSize: 28
                     font.bold: true
@@ -2750,7 +2807,7 @@ MuseScore {
                 color: "#aaaaaa"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
-                text: "v0.7.10: Übergangsversion für die neue Loader-Architektur. Sie kann künftig eine versionierte App-Datei live laden und deren aktive Version für den nächsten Start speichern."
+                text: "Host v0.7.11: Windows-Dateipfade, Settings-Import und Wiederherstellung bei Ladefehlern korrigiert."
             }
         }
     }
@@ -2759,17 +2816,23 @@ MuseScore {
         id: hotAppLoader
         anchors.fill: parent
         visible: hotAppActive
-        active: hotAppActive
+        active: hotAppRequested
 
         onLoaded: {
-            if (item && typeof item.bootstrapRun === "function")
+            try {
+                if (!item || typeof item.bootstrapRun !== "function")
+                    throw Error("App-Einstieg bootstrapRun fehlt.")
                 item.bootstrapRun()
+                hotAppActive = true
+                updateStatus = "Live-App v" + hotAppVersion + " geladen."
+            } catch (e) {
+                restoreAfterAppFailure("App-Start fehlgeschlagen: " + String(e) + ". Die bisherige Oberfläche bleibt verfügbar.")
+            }
         }
 
         onStatusChanged: {
             if (status === Loader.Error) {
-                hotAppActive = false
-                updateStatus = "Live-App konnte nicht geladen werden. Die bisherige Oberfläche bleibt aktiv."
+                restoreAfterAppFailure("Live-App konnte nicht geladen werden: " + String(source) + ". Über Update prüfen erneut installieren.")
             }
         }
     }

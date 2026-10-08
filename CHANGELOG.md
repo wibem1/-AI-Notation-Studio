@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.7 – 08.10.2026 / Starter 0.7.16
+
+- Fensterhöhe und -breite anhand des verfügbaren Bildschirms begrenzt; Pluginobjekte folgen der Größe ihres Elternfensters. Dadurch bleibt die Scrollleiste auch bei Windows-Skalierung innerhalb des Fensters.
+- Qt-5-Bedienungstest um Mausrad und Scrollleisteninteraktion ergänzt.
+
 ## 0.10.6 – 08.10.2026 / Starter 0.7.15
 
 - Starter lädt die mitgelieferte App über den eindeutigen Dateinamen AI-Notation-Studio-App-0.10.6.qml. Ältere Cache-URLs werden übergangen.

@@ -10,7 +10,7 @@ def run(code):
  v=e.evaluate(code)
  assert not v.isError(),v.toString()
  return v.toString()
-run('''var root={version:"0.10.6"},settings={},hotAppActive=false,hotAppRequested=false,hotAppVersion="";
+run('''var root={version:"0.10.7"},settings={},hotAppActive=false,hotAppRequested=false,hotAppVersion="";
 var updateBusy=false,updateRemoteVersion="",updateSourceText="",updateIsHotApp=false,updateStatus="",updaterTargetPath="";
 var requests=[],writes={},hotAppLoader={source:""};
 var Qt={resolvedUrl:function(s){return "file:///C:/Users/Test/Plugins/"+s;},callLater:function(f){f();}};
@@ -21,21 +21,21 @@ XMLHttpRequest.prototype.open=function(method,url){this.url=url;};
 XMLHttpRequest.prototype.setRequestHeader=function(){};
 XMLHttpRequest.prototype.send=function(){};
 '''+qml[a:b])
-remote=qml.replace('version: "0.10.6"','version: "0.10.7"',1)
+remote=qml.replace('version: "0.10.7"','version: "0.10.8"',1)
 run('var remote='+json.dumps(remote)+';checkForUpdate();')
 assert run('updateBusy')=='true'
 run('var req=requests[0];req.status=200;req.responseText=remote;req.readyState=4;req.onreadystatechange();')
 assert run('updateBusy')=='false'
-assert run('updateRemoteVersion')=='0.10.7'
+assert run('updateRemoteVersion')=='0.10.8'
 assert run('updateSourceText===remote && updateIsHotApp')=='true'
 # Duplicate completion must not process or revert the result.
 run('req.responseText="invalid";req.onreadystatechange();')
-assert run('updateRemoteVersion')=='0.10.7'
+assert run('updateRemoteVersion')=='0.10.8'
 run('installUpdate();')
-assert run('writes["C:/Users/Test/Plugins/AI-Notation-Studio-App-0.10.7.qml"]===remote')=='true'
-assert run('hotAppLoader.source')=='file:///C:/Users/Test/Plugins/AI-Notation-Studio-App-0.10.7.qml'
+assert run('writes["C:/Users/Test/Plugins/AI-Notation-Studio-App-0.10.8.qml"]===remote')=='true'
+assert run('hotAppLoader.source')=='file:///C:/Users/Test/Plugins/AI-Notation-Studio-App-0.10.8.qml'
 assert run('hotAppRequested')=='true'
-assert run('settings.activeHotAppVersion')=='0.10.7'
+assert run('settings.activeHotAppVersion')=='0.10.8'
 assert run('updateSourceText')==''
 # Equal versions are reported as current.
 run('hotAppActive=false;checkForUpdate();var equal=requests[1];equal.status=200;equal.responseText='+json.dumps(qml)+';equal.readyState=4;equal.onreadystatechange();')

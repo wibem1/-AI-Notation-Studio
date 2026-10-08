@@ -1,4 +1,5 @@
 import QtQuick 2.2
+import QtQuick.Window 2.2
 import MuseScore 3.0
 import MuseScore 3.0 as MS
 import FileIO 3.0
@@ -7,14 +8,14 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "Starter für AI Notation Studio"
-    version: "0.7.15"
+    version: "0.7.16"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
-    implicitWidth: 900
-    implicitHeight: 900
-    width: 900
-    height: 900
+    implicitWidth: Math.max(320, Math.min(900, Screen.desktopAvailableWidth - 80))
+    implicitHeight: Math.max(240, Math.min(900, Screen.desktopAvailableHeight - 100))
+    width: parent ? parent.width : implicitWidth
+    height: parent ? parent.height : implicitHeight
 
     property bool hotAppActive: false
     property bool hotAppRequested: false
@@ -114,13 +115,13 @@ MuseScore {
     }
 
     function tryBundledApp() {
-        var url = String(Qt.resolvedUrl("AI-Notation-Studio-App-0.10.6.qml"))
-        return activateHotApp(url, "0.10.6")
+        var url = String(Qt.resolvedUrl("AI-Notation-Studio-App-0.10.7.qml"))
+        return activateHotApp(url, "0.10.7")
     }
 
     function startApp() {
         startupDetails = ""
-        if (settings.activeHotAppSource && compareVersions(settings.activeHotAppVersion, "0.10.6") > 0) {
+        if (settings.activeHotAppSource && compareVersions(settings.activeHotAppVersion, "0.10.7") > 0) {
             if (activateHotApp(settings.activeHotAppSource, settings.activeHotAppVersion)) return
         }
         tryBundledApp()
@@ -139,7 +140,7 @@ MuseScore {
             anchors.margins: 24
             spacing: 20
             Text {
-                text: "AI Notation Studio · Starter 0.7.15"
+                text: "AI Notation Studio · Starter 0.7.16"
                 color: "white"
                 font.pixelSize: 26
             }

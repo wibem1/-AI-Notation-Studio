@@ -130,3 +130,7 @@ Der UI-Test prüft den Haupt-Flickable mit überhohem Inhalt, einen echten Mausk
 ## 0.10.5 – Updatefunktion
 
 `python tests/test_update.py` führt die echten QML-Updaterfunktionen im Qt-JS-Interpreter mit deterministischen HTTP-Antworten aus. Geprüft: einmalige Antwortverarbeitung, neuer/gleicher Versionsstand, Schreiben und Lesen unter Windows-Dateipfaden, Aktivierungsquelle sowie HTTP-Fehler mit Rücksetzung des Beschäftigtzustands. Kein externer Netzaufruf.
+
+## 0.10.7 – Bildschirm und Fenstergröße
+
+Der Hosttest prüft, dass die Anfangsgröße unterhalb der verfügbaren Bildschirmgröße bleibt. Mit QT_SCALE_FACTOR=1.5 wird zusätzlich der Start bei Skalierung geprüft. Der UI-Test läuft nun auch mit --qt5 und prüft eine verkleinerte Fensterhöhe (500), die zugehörige tatsächliche Scrollbereichhöhe und die Erreichbarkeit des Inhaltsendes.

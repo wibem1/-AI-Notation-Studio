@@ -1,14 +1,14 @@
-# AI Notation Studio v0.10.1
+# AI Notation Studio v0.10.2
 
 AI Notation Studio ist ein MuseScore-Studio-Plugin für KI-gestützte Analyse, Komposition und Bearbeitung direkt an der Partitur.
 
-## Windows-Startkorrektur 0.10.1 – 08.10.2026
+## Startkorrektur 0.10.2 – 08.10.2026 / Starter 0.7.12
 
-Der Host `AI-Notation-Studio.qml` ist auf 0.7.11 aktualisiert. Der fehlende explizite Settings-Import konnte bereits den Hoststart verhindern. Windows-Laufwerks- und UNC-Pfade werden korrekt zwischen QML-URLs und lokalen FileIO-Pfaden umgewandelt. Beim Laden bleibt die vorhandene Oberfläche sichtbar, bis die App bereit ist; Fehler stellen die Oberfläche wieder her. Eine mitgelieferte `AI-Notation-Studio-App.qml` wird beim Start erkannt. Eine App lädt keine ältere gespeicherte Fassung über sich selbst.
+Der Starter verwendet nur QtQuick, MuseScore und FileIO. Die eigentliche Oberfläche wird getrennt geladen. Fehler beim Kompilieren oder Starten der App werden mit Dateipfad und QML-Fehlertext auf einer einfachen, auswählbaren Diagnosefläche angezeigt. Der Starter benötigt weder QtQuick.Controls noch Qt.labs.settings. Beide Dateien verwenden ausdrücklich MuseScores eigenen Settings-Typ; Kategorie und bestehende Keys bleiben erhalten.
 
-Bei leerem Fenster kann der eingebaute Updater nicht bedient werden. MuseScore vollständig schließen und im vorhandenen Pluginordner `AI-Notation-Studio.qml` sowie `AI-Notation-Studio-App.qml` durch die aktuellen Dateien ersetzen. Die Dateien müssen im selben Ordner liegen. Anschließend MuseScore neu starten und das Plugin öffnen. Keys und Score-Gedächtnis bleiben erhalten. Der weitere Updateweg bleibt die eingebaute Updatefunktion.
+Die frühere Behauptung, dem ursprünglichen Host fehle ein Settings-Import, war falsch: MuseScore exportiert diesen Typ bereits. Im Testobjekt fehlte diese Registrierung. Der Test bildet sie jetzt nach. Das zusätzliche Qt.labs.settings-Modul ist keine notwendige Laufzeitabhängigkeit mehr. Ob dessen Fehlen das konkrete Windows-Fenster verursacht hat, ist ohne dortigen Fehlertext noch nicht bestätigt.
 
-Host und komplette App wurden gemeinsam unter Qt 5.15 und Qt 6.8 mit MuseScore-API-Testobjekten gestartet; Windows-Pfade und Wiederherstellung geprüft. Ein echter Windows-11-MuseScore-Test steht noch aus.
+Bei leerem Fenster MuseScore vollständig schließen und im vorhandenen Pluginordner **beide** Dateien `AI-Notation-Studio.qml` und `AI-Notation-Studio-App.qml` ersetzen. Nur `AI-Notation-Studio.qml` im Pluginmanager aktivieren. Die App-Datei ist ein Bestandteil desselben Plugins. Anschließend MuseScore neu starten. Fehlertexte können von der neuen Startfläche kopiert werden.
 
 ## Arbeitsweisen ab 0.10.0 – 06.10.2026
 
@@ -32,7 +32,7 @@ Die drei Anbieter verwenden die vorhandenen gespeicherten API-Keys. Kosten werde
 
 MusicXML übernimmt unter anderem Stimmen, Akkorde, Pausen, Punktierungen, Tuplets, Dynamik, Artikulationen, Bögen, Haltebögen, Fermaten, Pedal und Tempo. Nicht umsetzbare seltene Markierungen erscheinen als Hinweise. Das vollständige CS1 bleibt als `.cs` neben der erzeugten `.musicxml` im Pluginverzeichnis und im Score-Metadatum `AI-Notation-Studio-Source-CS1` erhalten. Den geöffneten Score anschließend speichern.
 
-Installation über **Update prüfen → Update installieren**. Der bestehende Host bleibt unverändert. Der gesamte Laufzeitcode ist in der App-QML enthalten; es sind keine zusätzlichen JS-Dateien zur Installation erforderlich.
+Installation über **Update prüfen → Update installieren**. Für 0.10.2 den Starter einmal manuell ersetzen. Der gesamte Laufzeitcode ist in der App-QML enthalten; es sind keine zusätzlichen JS-Dateien zur Installation erforderlich.
 
 ## Aktuelle Funktionen
 

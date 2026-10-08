@@ -1,8 +1,15 @@
 # Changelog
 
+## 0.10.2 – 08.10.2026 / Starter 0.7.12
+
+- Minimaler Starter ohne Controls-/Labs-Import; sichtbare QML-Fehler mit Dateipfad statt unsichtbarer Konsolenausgabe.
+- MuseScores nativen Settings-Typ ausdrücklich verwendet; vorhandene Kategorie und Keys beibehalten.
+- Testobjekt um den tatsächlich von MuseScore exportierten Settings-Typ ergänzt. Die bisherige Aussage über einen fehlenden Host-Import wird damit korrigiert.
+- Explizite implizite Fenstergrößen; App und Starter weiterhin ein gemeinsames Plugin.
+
 ## 0.10.1 – 08.10.2026 / Host 0.7.11
 
-- Fehlenden Qt.labs.settings-Import im Host ergänzt; alter Startfehler unter Qt 5 und 6 reproduziert.
+- Qt.labs.settings-Import im Host ergänzt. **Korrektur in 0.10.2:** Der angenommene fehlende Settings-Typ entstand nur durch ein unvollständiges Testobjekt.
 - Windows-Laufwerksbuchstaben, Leerzeichen, Unicode, UNC und lokale File-URLs korrekt behandelt; Updater schreibt lokale Pfade.
 - Loader zeigt die App erst nach erfolgreichem Start, aktiviert keine alte Quelle vor dem neuen Ziel und stellt bei Fehlern eine bedienbare Oberfläche wieder her.
 - Mitgelieferte App wird beim Hoststart erkannt; ältere App-Versionen werden nicht über die aktuelle App geladen.

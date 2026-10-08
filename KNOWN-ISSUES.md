@@ -1,6 +1,6 @@
 # Bekannte Probleme und Grenzen
 
-Stand: **v0.10.1 – 08.10.2026**
+Stand: **v0.10.2 – 08.10.2026**
 
 ## Bewusste Grenzen
 
@@ -36,3 +36,7 @@ Die bisher unzuverlässige Vorab-Verkürzung leerer Ausgangspartituren wurde ent
 ## 0.10.1 – Installation bei leerem Fenster
 
 Der Host muss einmal manuell zusammen mit der App ersetzt und MuseScore neu gestartet werden, wenn das Fenster bereits beim Start leer bleibt. Die App allein kann einen fehlgeschlagenen Hoststart nicht reparieren. Ein tatsächlicher Windows-11-Test ist noch erforderlich; die Startkorrektur und Loader-Wiederherstellung sind unter Qt 5 und 6 automatisiert geprüft.
+
+## 0.10.2 – Windows-Startdiagnose
+
+Das weiterhin leere Fenster ist gemeldet. Seine konkrete Ursache ist noch nicht auf dem Windows-System bestätigt. Der neue Starter vermeidet zusätzliche UI-Imports und zeigt App-Ladefehler an. Die frühere Behauptung über einen fehlenden Settings-Typ war ein Teststub-Fehler, keine nachgewiesene MuseScore-Ursache.

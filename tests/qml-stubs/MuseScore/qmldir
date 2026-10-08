@@ -1,2 +1,3 @@
 module MuseScore
 MuseScore 3.0 MuseScore.qml
+Settings 3.0 Settings.qml

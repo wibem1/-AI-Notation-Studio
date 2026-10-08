@@ -16,11 +16,11 @@ else:
 ROOT=Path(__file__).resolve().parents[1]
 app=QGuiApplication([]);app.setOrganizationName('LoaderTests');app.setApplicationName('LoaderTests')
 v=QQuickView();e=v.engine();e.addImportPath(str(ROOT/'tests/qml-stubs'))
-# Reproduce the shipped host defect using exactly the prior file, without Qt.labs.settings.
+# The earlier missing-Settings claim was a test-stub defect: MuseScore exports it.
 old=subprocess.check_output(['git','show','ece06db88dcbb9d22488947ca7ab6882e2a127df:AI-Notation-Studio.qml'])
 c=QQmlComponent(e);c.setData(old,QUrl.fromLocalFile(str(ROOT/'OldHost.qml')))
-assert any('Settings is not a type' in x.toString() for x in c.errors()),[x.toString() for x in c.errors()]
-print('Previous host start failure reproduced:',qVersion())
+assert not c.errors(),[x.toString() for x in c.errors()]
+print('Original host Settings resolves with faithful API stub:',qVersion())
 v.setSource(QUrl.fromLocalFile(str(ROOT/'AI-Notation-Studio.qml')));assert not v.errors(),[x.toString() for x in v.errors()]
 v.setResizeMode(QQuickView.SizeRootObjectToView);v.resize(900,900);r=v.rootObject();assert r
 for file in r.findChildren(QObject):
@@ -42,17 +42,27 @@ for source,path in cases:
  assert js('host.fileUrlToLocalPath(host.normalizedAppUrl('+json.dumps(source)+'))')==path
 assert js('host.normalizedAppUrl("C:\\\\Users\\\\Wilhelm\\\\Plugins\\\\a.qml")')=='file:///C:/Users/Wilhelm/Plugins/a.qml'
 # A missing cached file must not conceal the functional host surface.
-js('host.activateHotApp("file:///no-such-app.qml","0.10.1")')
+js('host.activateHotApp("file:///no-such-app.qml","0.10.2")')
 for i in range(10):app.processEvents()
 assert not r.property('hotAppActive') and not r.property('hotAppRequested')
-assert 'nicht geladen' in r.property('updateStatus')
+assert 'nicht gestartet' in r.property('updateStatus')
+assert 'no-such-app.qml' in r.property('startupDetails')
+# Compilation errors (including missing imports) must be visible, not only logged.
+bad=Path(config.name)/'BadApp.qml';bad.write_text('import MissingModuleForStartupTest 1.0\nItem {}')
+js('host.activateHotApp('+json.dumps(QUrl.fromLocalFile(str(bad)).toString())+',"0.10.2")')
+for i in range(10):app.processEvents()
+assert not r.property('hotAppActive')
+assert 'MissingModuleForStartupTest' in r.property('startupDetails')
+if '--qt5' not in sys.argv:
+ shot=v.grabWindow();assert shot.pixelColor(4,4).name()=='#202124'
+ assert shot.save(str(Path(config.name)/'startup-fallback.png'))
 # The complete actual app must load through the host, not only as a standalone root.
 url=QUrl.fromLocalFile(str(ROOT/'AI-Notation-Studio-App.qml')).toString()
-js('host.activateHotApp('+json.dumps(url)+',"0.10.1")')
+js('host.activateHotApp('+json.dumps(url)+',"0.10.2")')
 for i in range(30):app.processEvents()
 assert r.property('hotAppActive'),r.property('updateStatus')
 assert r.property('hotAppRequested')
 assert r.property('width')==900 and r.property('height')==900
 if '--qt5' not in sys.argv:assert not v.grabWindow().isNull()
-assert any(x.property('version')=='0.10.1' for x in r.findChildren(QObject))
+assert any(x.property('version')=='0.10.2' for x in r.findChildren(QObject))
 print('Host rendered, Windows/UNC paths and missing-app fallback OK; full app loaded:',qVersion())

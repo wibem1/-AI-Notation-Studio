@@ -122,3 +122,7 @@ Praxistest in MuseScore noch erforderlich: Update auf 0.10.0; Idee mit Modell A 
 ## 0.10.2 – Starter und sichtbare Ladefehler
 
 `python tests/test_loader.py` und `python tests/test_loader.py --qt5` prüfen den originalen Host mit dem korrigierten Settings-Testobjekt, den minimalen Starter mit der vollständigen App, Windows-/UNC-Dateipfade und die sichtbare Rückkehr bei fehlenden Dateien und fehlenden QML-Modulen. Qt 6 prüft zusätzlich die tatsächlich gerenderte Hintergrundfarbe der Fehlerfläche. Qt 5 prüft die Instanziierung und Zustände, da Window-Grab im Offscreen-Backend fehlt. Echte API-Keys und KI-Anfragen werden nicht verwendet. Ein realer Windows-11-MuseScore-Test bleibt ausstehend.
+
+## 0.10.4 – Scrollen
+
+Der UI-Test prüft den Haupt-Flickable mit überhohem Inhalt, einen echten Mausklick auf die vertikale Scrollleiste sowie ein Mausradereignis. Beide bewegen contentY. Der Loaderstart wird zusätzlich unter Qt 5 geprüft.

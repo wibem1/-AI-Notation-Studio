@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.4 – 08.10.2026 / Starter 0.7.14
+
+- Hauptbereich als explizit interaktiven Flickable mit dauerhaft sichtbarer vertikaler Scrollleiste umgesetzt. Inhaltsbreite reserviert Platz für die Scrollleiste.
+
 ## 0.10.3 – 08.10.2026 / Starter 0.7.13
 
 - Unterschiedliche Namen im Pluginmanager: AI Notation Studio und AI Notation Studio – interne App (nicht starten). Nur den Starter aktivieren.

@@ -23,3 +23,23 @@ for child in r.findChildren(QObject):
  if 'TextArea' in child.metaObject().className() and child.property('text')==r.property('compositionIdea'):
   child.setProperty('text','Vom Nutzer bearbeitete Idee');app.processEvents();assert r.property('compositionIdea')=='Vom Nutzer bearbeitete Idee';print('Actual QML idea editing OK');break
 else:raise AssertionError('Idea editor missing')
+# Exercise actual pointer interaction with the persistent main scrollbar.
+from PySide6.QtQuick import QQuickItem
+from PySide6.QtTest import QTest
+from PySide6.QtCore import QPoint,Qt
+scroll=r.findChild(QQuickItem,'compositionScroll');bar=r.findChild(QQuickItem,'compositionScrollBar')
+assert scroll and bar and scroll.property('interactive')
+assert scroll.property('contentHeight')>scroll.height()
+barpoint=bar.mapToScene(QPoint(9,int(bar.height()-10)))
+QTest.mouseClick(v,Qt.LeftButton,Qt.NoModifier,QPoint(int(barpoint.x()),int(barpoint.y())))
+QTest.qWait(200)
+assert scroll.property('contentY')>0,scroll.property('contentY')
+print('Actual main scrollbar pointer interaction scrolls content')
+from PySide6.QtGui import QWheelEvent
+from PySide6.QtCore import QPointF,QCoreApplication
+scroll.setProperty('contentY',0)
+pos=scroll.mapToScene(QPointF(scroll.width()-30,10))
+wheel=QWheelEvent(pos,pos,QPoint(0,0),QPoint(0,-120),Qt.NoButton,Qt.NoModifier,Qt.NoScrollPhase,False)
+QCoreApplication.sendEvent(v,wheel);QTest.qWait(250)
+assert scroll.property('contentY')>0
+print('Actual mouse wheel scrolls main content')

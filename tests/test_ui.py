@@ -15,8 +15,11 @@ else:
  from PySide6.QtTest import QTest
 app=QGuiApplication([]);app.setOrganizationName('WorkflowTest');app.setApplicationName('WorkflowTest');v=QQuickView();v.engine().addImportPath(str(Path(__file__).resolve().parent/'qml-stubs'));v.setSource(QUrl.fromLocalFile(str(Path('AI-Notation-Studio-App.qml').resolve())));assert not v.errors(),[x.toString() for x in v.errors()];v.setResizeMode(QQuickView.SizeRootObjectToView);v.resize(900,900);r=v.rootObject();QMetaObject.invokeMethod(r,'bootstrapRun');
 for child in r.findChildren(QObject):
- if child.metaObject().indexOfProperty('compositionStrategy')>=0:
+ try: meta=child.metaObject()
+ except RuntimeError: continue
+ if meta.indexOfProperty('compositionStrategy')>=0:
   child.setProperty('compositionStrategy',1);child.setProperty('sameStageModel',False);child.setProperty('secondProvider','Google');child.setProperty('secondModel','gemini-3.8-flash')
+for child in r.findChildren(QObject):
  if 'ComboBox' in child.metaObject().className() and child.property('count')==7:child.setProperty('currentIndex',2)
 r.setProperty('technicalExpanded',True);r.setProperty('compositionIdea','Eine klare, ruhige Melodie mit einer bewegten Gegenstimme.');r.setProperty('compositionJob',{'second':{'provider':'Google','model':'gemini-3.8-flash'}});r.setProperty('ideaReady',True);v.show()
 for i in range(8):app.processEvents()
@@ -53,3 +56,21 @@ assert r.height()==500 and abs(scroll.height()-464)<1
 scroll.setProperty('contentY',scroll.property('contentHeight')-scroll.height())
 assert scroll.property('contentY')>0
 print('Smaller window follows viewport; bottom remains reachable')
+# Actual editable model ComboBoxes keep the existing composition API and save choices.
+primary=r.findChild(QQuickItem,'primaryModelSelector');second=r.findChild(QQuickItem,'secondModelSelector')
+assert primary and second and primary.property('editable') and second.property('editable')
+e=v.engine();e.globalObject().setProperty('studio',e.newQObject(r));e.globalObject().setProperty('primary',e.newQObject(primary));e.globalObject().setProperty('second',e.newQObject(second))
+def evaluate(code):
+ result=e.evaluate(code);assert not result.isError(),result.toString();return result.toString()
+evaluate('studio.modelLists=({OpenAI:["gpt-test-primary"],Google:["gemini-test-second"]});')
+app.processEvents()
+evaluate('primary.currentIndex=primary.find("gpt-test-primary");primary.activated(primary.currentIndex);')
+app.processEvents()
+assert evaluate('studio.providerModel("OpenAI")')=='gpt-test-primary'
+assert primary.property('editText')=='gpt-test-primary'
+evaluate('second.currentIndex=second.find("gemini-test-second");second.activated(second.currentIndex);')
+app.processEvents();assert second.property('editText')=='gemini-test-second'
+evaluate('primary.editText="gpt-own-model";primary.accepted();')
+app.processEvents();assert evaluate('studio.providerModel("OpenAI")')=='gpt-own-model'
+assert primary.property('text')=='gpt-own-model'
+print('Both actual model selectors save selections; manual model names remain usable')

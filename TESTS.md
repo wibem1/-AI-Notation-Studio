@@ -142,3 +142,7 @@ Der Hosttest prüft, dass die Anfangsgröße unterhalb der verfügbaren Bildschi
 ## 0.10.9 – Update und Wiederöffnung
 
 `python tests/test_update_restart.py` (auch `--qt5`) verwendet die vollständigen QML-Dateien und echten Datenträgerzugriff über einen FileIO-Testadapter. Ein Update wird geschrieben, geprüft, geladen und in Active.json gespeichert. Nach Zerstörung des Pluginobjekts lädt derselbe Engine-Cache die neue Version; ein zusätzlicher Prozess lädt ebenfalls die neue Version. Veraltete Settings-Einträge werden bewusst vorgegeben und ignoriert. Ein manipulierter Datensatz mit Pfad außerhalb des Pluginordners wird abgewiesen. Keine echten Netzaufrufe oder API-Keys.
+
+## 0.10.10 – Modellauswahl
+
+`python tests/test_model_catalog.py` prüft die echten Modellkatalogfunktionen im Qt-JS-Interpreter mit deterministischen API-Antworten: drei Header-/Endpunktverträge, Pagination, Filter, Duplikate, eigene Modelle, keyfreier Cache, HTTP-Fehler und verspätete Antworten. Der UI-Test prüft unter Qt 5 und 6 beide echten ComboBoxes samt Auswahl, Speicherung und manuellem Modellnamen. Keine echten API-Abfragen. Der Update-Neustarttest wird für die aktuelle App-Fassung erneut ausgeführt.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.10 – 08.10.2026
+
+- Editierbare Modellauswahl für Direkt/Stufe 1 und Stufe 2.
+- Modelllisten aus den drei Anbieter-APIs; Pagination, Textmodellfilter, lokal gespeicherter Katalog und Erhalt der Auswahl bei Fehlern.
+- Bestehende Keys, eigene Modellnamen und dauerhafter Updateweg bleiben erhalten.
+
 ## 0.10.9 – 08.10.2026 / Starter 0.7.17
 
 - Dauerhafte Startauswahl als geprüfte lokale Active.json-Datei. Starter und App lesen sie frisch vom Datenträger statt getrennte Settings-Kopien für die aktive Version zu verwenden.

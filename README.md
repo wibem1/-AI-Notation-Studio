@@ -1,6 +1,12 @@
-# AI Notation Studio v0.10.9
+# AI Notation Studio v0.10.10
 
 AI Notation Studio ist ein MuseScore-Studio-Plugin für KI-gestützte Analyse, Komposition und Bearbeitung direkt an der Partitur.
+
+## Modellauswahl ab 0.10.10
+
+Unter **Technisches** stehen für Direkt/Stufe 1 sowie für Stufe 2 editierbare Auswahlfelder. Mit **Modelle laden** wird die Liste für den jeweiligen Anbieter über den gespeicherten API-Key abgerufen. Die Listen bleiben lokal gespeichert. Eigene Modellnamen können weiterhin eingegeben werden; vorhandene Auswahl und Keys bleiben erhalten. Für Stufe 2 zunächst **Dasselbe wie Stufe 1** ausschalten. Ohne gespeicherten Key erscheint ein entsprechender Hinweis. Bei Ladefehlern bleiben bisherige Liste und Modellwahl erhalten.
+
+Die Listen verwenden die dokumentierten Anbieter-Endpunkte: [OpenAI](https://developers.openai.com/api/reference/resources/models/methods/list), [Anthropic](https://platform.claude.com/docs/en/api/models/list), [Google Gemini](https://ai.google.dev/api/models). Nicht für Textkomposition geeignete Audio-, Bild- und Embedding-Modelle werden ausgefiltert; Gemini-Modelle benötigen generateContent. Die Modell-ID wird unverändert an den bestehenden Kompositionsaufruf übergeben. Verfügbarkeit und Zugriffsrechte richten sich nach dem API-Konto. Modelllisten enthalten keine API-Keys.
 
 ## Dauerhafte Updates ab 0.10.9
 

@@ -146,3 +146,7 @@ Der Hosttest prüft, dass die Anfangsgröße unterhalb der verfügbaren Bildschi
 ## 0.10.10 – Modellauswahl
 
 `python tests/test_model_catalog.py` prüft die echten Modellkatalogfunktionen im Qt-JS-Interpreter mit deterministischen API-Antworten: drei Header-/Endpunktverträge, Pagination, Filter, Duplikate, eigene Modelle, keyfreier Cache, HTTP-Fehler und verspätete Antworten. Der UI-Test prüft unter Qt 5 und 6 beide echten ComboBoxes samt Auswahl, Speicherung und manuellem Modellnamen. Keine echten API-Abfragen. Der Update-Neustarttest wird für die aktuelle App-Fassung erneut ausgeführt.
+
+## 0.10.11 – Nativer FileIO-Reader
+
+`python tests/test_startup_record.py` reproduziert die falsche Fehlermeldung von 0.10.10 trotz erfolgreich geschriebener Aktivierung. Der aktuelle Code prüft die JSON-Werte, toleriert zusätzliche Lese-Zeilenumbrüche und erkennt weiterhin fehlgeschlagene Schreibvorgänge. Der FileIO-Adapter im vollständigen Update-/Neustarttest bildet nun MuseScores do/readLine-Schleife einschließlich des abschließenden Null-Zeilenumbruchs ab. Beide Qt-Versionen prüfen zusätzlich das Ausbleiben der falschen Fehlermeldung.

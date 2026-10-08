@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.11 – 08.10.2026
+
+- Nachkontrolle der dauerhaften Aktivierung vergleicht JSON-Werte statt den Rohtext. MuseScores FileIO.read hängt zusätzliche Zeilenumbrüche an; dadurch hatte 0.10.10 auch nach erfolgreichem Schreiben einen Fehler gemeldet.
+- FileIO-Neustarttest bildet den nativen zeilenweisen Reader nach; echte Schreibfehler bleiben erkennbar.
+
 ## 0.10.10 – 08.10.2026
 
 - Editierbare Modellauswahl für Direkt/Stufe 1 und Stufe 2.

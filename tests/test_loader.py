@@ -25,11 +25,18 @@ v.setSource(QUrl.fromLocalFile(str(ROOT/'AI-Notation-Studio.qml')));assert not v
 v.setResizeMode(QQuickView.SizeRootObjectToView);v.resize(900,900);r=v.rootObject();assert r
 for file in r.findChildren(QObject):
  if file.metaObject().indexOfProperty('data')>=0 and file.metaObject().indexOfProperty('source')>=0:file.setProperty('data',(ROOT/'AI-Notation-Studio-App.qml').read_text())
+# Simulate a previously saved 0.10.3 app; the new bundled URL must win.
+for child in r.findChildren(QObject):
+ if child.metaObject().indexOfProperty('activeHotAppSource')>=0:
+  child.setProperty('activeHotAppSource',QUrl.fromLocalFile(str(ROOT/'versions/AI-Notation-Studio-App-0.10.3.qml')).toString())
+  child.setProperty('activeHotAppVersion','0.10.3')
 QMetaObject.invokeMethod(r,'run');v.show()
 for i in range(10):app.processEvents()
 assert r.property('width')==900 and r.property('height')==900
 assert r.property('hotAppActive'),r.property('updateStatus')
 assert r.property('title')=='AI Notation Studio'
+assert any(x.property('version')=='0.10.6' for x in r.findChildren(QObject))
+assert not any(x.property('version')=='0.10.3' for x in r.findChildren(QObject))
 if '--qt5' not in sys.argv:assert not v.grabWindow().isNull()
 e.globalObject().setProperty('host',e.newQObject(r))
 def js(code):
@@ -43,14 +50,14 @@ for source,path in cases:
  assert js('host.fileUrlToLocalPath(host.normalizedAppUrl('+json.dumps(source)+'))')==path
 assert js('host.normalizedAppUrl("C:\\\\Users\\\\Wilhelm\\\\Plugins\\\\a.qml")')=='file:///C:/Users/Wilhelm/Plugins/a.qml'
 # A missing cached file must not conceal the functional host surface.
-js('host.activateHotApp("file:///no-such-app.qml","0.10.5")')
+js('host.activateHotApp("file:///no-such-app.qml","0.10.6")')
 for i in range(10):app.processEvents()
 assert not r.property('hotAppActive') and not r.property('hotAppRequested')
 assert 'nicht gestartet' in r.property('updateStatus')
 assert 'no-such-app.qml' in r.property('startupDetails')
 # Compilation errors (including missing imports) must be visible, not only logged.
 bad=Path(config.name)/'BadApp.qml';bad.write_text('import MissingModuleForStartupTest 1.0\nItem {}')
-js('host.activateHotApp('+json.dumps(QUrl.fromLocalFile(str(bad)).toString())+',"0.10.5")')
+js('host.activateHotApp('+json.dumps(QUrl.fromLocalFile(str(bad)).toString())+',"0.10.6")')
 for i in range(10):app.processEvents()
 assert not r.property('hotAppActive')
 assert 'MissingModuleForStartupTest' in r.property('startupDetails')
@@ -59,11 +66,11 @@ if '--qt5' not in sys.argv:
  assert shot.save(str(Path(config.name)/'startup-fallback.png'))
 # The complete actual app must load through the host, not only as a standalone root.
 url=QUrl.fromLocalFile(str(ROOT/'AI-Notation-Studio-App.qml')).toString()
-js('host.activateHotApp('+json.dumps(url)+',"0.10.5")')
+js('host.activateHotApp('+json.dumps(url)+',"0.10.6")')
 for i in range(30):app.processEvents()
 assert r.property('hotAppActive'),r.property('updateStatus')
 assert r.property('hotAppRequested')
 assert r.property('width')==900 and r.property('height')==900
 if '--qt5' not in sys.argv:assert not v.grabWindow().isNull()
-assert any(x.property('version')=='0.10.5' and x.property('title')=='AI Notation Studio – interne App (nicht starten)' for x in r.findChildren(QObject))
+assert any(x.property('version')=='0.10.6' and x.property('title')=='AI Notation Studio – interne App (nicht starten)' for x in r.findChildren(QObject))
 print('Host rendered, Windows/UNC paths and missing-app fallback OK; full app loaded:',qVersion())

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.6 – 08.10.2026 / Starter 0.7.15
+
+- Starter lädt die mitgelieferte App über den eindeutigen Dateinamen AI-Notation-Studio-App-0.10.6.qml. Ältere Cache-URLs werden übergangen.
+- Eingebaute Updateprüfung aus 0.10.5 beibehalten.
+
 ## 0.10.5 – 08.10.2026
 
 - Updateprüfung repariert: fehlende lokale finished-Variable verhindert nicht mehr die Verarbeitung der HTTP-Antwort. Starter unverändert.

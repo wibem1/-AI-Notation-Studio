@@ -7,7 +7,7 @@ MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "Starter für AI Notation Studio"
-    version: "0.7.14"
+    version: "0.7.15"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -114,13 +114,13 @@ MuseScore {
     }
 
     function tryBundledApp() {
-        var url = String(Qt.resolvedUrl("AI-Notation-Studio-App.qml"))
-        return activateHotApp(url, "0.10.4")
+        var url = String(Qt.resolvedUrl("AI-Notation-Studio-App-0.10.6.qml"))
+        return activateHotApp(url, "0.10.6")
     }
 
     function startApp() {
         startupDetails = ""
-        if (settings.activeHotAppSource && compareVersions(settings.activeHotAppVersion, "0.10.4") > 0) {
+        if (settings.activeHotAppSource && compareVersions(settings.activeHotAppVersion, "0.10.6") > 0) {
             if (activateHotApp(settings.activeHotAppSource, settings.activeHotAppVersion)) return
         }
         tryBundledApp()
@@ -139,7 +139,7 @@ MuseScore {
             anchors.margins: 24
             spacing: 20
             Text {
-                text: "AI Notation Studio · Starter 0.7.14"
+                text: "AI Notation Studio · Starter 0.7.15"
                 color: "white"
                 font.pixelSize: 26
             }

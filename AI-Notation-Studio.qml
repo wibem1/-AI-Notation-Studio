@@ -1,14 +1,13 @@
 import QtQuick 2.2
 import QtQuick.Window 2.2
 import MuseScore 3.0
-import MuseScore 3.0 as MS
 import FileIO 3.0
 
 MuseScore {
     id: root
     menuPath: "Plugins.AI Notation Studio"
     description: "Starter für AI Notation Studio"
-    version: "0.7.16"
+    version: "0.7.17"
     requiresScore: true
     pluginType: "dialog"
     title: "AI Notation Studio"
@@ -23,13 +22,6 @@ MuseScore {
     property string updateStatus: "App wird vorbereitet …"
     property string startupDetails: ""
     property var pendingComponent: null
-
-    MS.Settings {
-        id: settings
-        category: "AI-Notation-Studio"
-        property string activeHotAppSource: ""
-        property string activeHotAppVersion: ""
-    }
 
     FileIO {
         id: updaterFile
@@ -115,14 +107,30 @@ MuseScore {
     }
 
     function tryBundledApp() {
-        var url = String(Qt.resolvedUrl("AI-Notation-Studio-App-0.10.7.qml"))
-        return activateHotApp(url, "0.10.7")
+        var url = String(Qt.resolvedUrl("AI-Notation-Studio-App-0.10.9.qml"))
+        return activateHotApp(url, "0.10.9")
+    }
+
+    function readStartupRecord() {
+        try {
+            updaterFile.source = fileUrlToLocalPath(Qt.resolvedUrl("AI-Notation-Studio-Active.json"))
+            var record = JSON.parse(String(updaterFile.read()))
+            if (record.format !== "AI-Notation-Studio-Active-1" ||
+                record.file !== "AI-Notation-Studio-App-" + record.version + ".qml" ||
+                !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(record.version)) return null
+            updaterFile.source = fileUrlToLocalPath(Qt.resolvedUrl(record.file))
+            var source = String(updaterFile.read())
+            var versionMatch = source.match(/version\s*:\s*"([0-9]+\.[0-9]+\.[0-9]+)"/)
+            if (!versionMatch || versionMatch[1] !== record.version) return null
+            return record
+        } catch (e) { return null }
     }
 
     function startApp() {
         startupDetails = ""
-        if (settings.activeHotAppSource && compareVersions(settings.activeHotAppVersion, "0.10.7") > 0) {
-            if (activateHotApp(settings.activeHotAppSource, settings.activeHotAppVersion)) return
+        var record = readStartupRecord()
+        if (record && compareVersions(record.version, "0.10.9") >= 0) {
+            if (activateHotApp(String(Qt.resolvedUrl(record.file)), record.version)) return
         }
         tryBundledApp()
     }
@@ -140,7 +148,7 @@ MuseScore {
             anchors.margins: 24
             spacing: 20
             Text {
-                text: "AI Notation Studio · Starter 0.7.16"
+                text: "AI Notation Studio · Starter 0.7.17"
                 color: "white"
                 font.pixelSize: 26
             }

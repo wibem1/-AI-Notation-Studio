@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.9 – 08.10.2026 / Starter 0.7.17
+
+- Dauerhafte Startauswahl als geprüfte lokale Active.json-Datei. Starter und App lesen sie frisch vom Datenträger statt getrennte Settings-Kopien für die aktive Version zu verwenden.
+- Auswahl wird nach erfolgreicher App-Initialisierung geschrieben und nachgelesen. Bei ungültigen/fehlenden Dateien wird das Bundle geladen.
+- Vollständiger Test: Live-Installation, Plugin schließen/erneut öffnen mit demselben Engine-Cache, zusätzlicher frischer Prozess.
+
 ## 0.10.8 – 08.10.2026
 
 - Scrollbereich an die tatsächliche native Fensterhöhe gebunden, auch wenn MuseScores eingebetteter Elternbereich größer bleibt.

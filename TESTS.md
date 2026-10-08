@@ -138,3 +138,7 @@ Der Hosttest prüft, dass die Anfangsgröße unterhalb der verfügbaren Bildschi
 ## 0.10.8 – Tatsächlich beschnittene MuseScore-Einbettung
 
 `python tests/test_clipped_window.py` erstellt einen festen 900 hohen Plugin-Elternbereich in einem 500 hohen nativen Fenster. Im unveränderten Analysemodus reproduziert Qt 6 an 0.10.7 den Fall: 850 hoher Inhalt passt in den 864 hohen Flickable, wird aber vom Fenster abgeschnitten. Auch Qt 5 reproduziert den übergroßen Viewport, mit anderen Stilmaßen. Der neue Code begrenzt den Flickable auf 464; Mausrad, Scrollleistenklick, Inhaltsende und Verkleinerung des tatsächlichen Fensters auf 400 werden unter beiden Qt-Versionen geprüft.
+
+## 0.10.9 – Update und Wiederöffnung
+
+`python tests/test_update_restart.py` (auch `--qt5`) verwendet die vollständigen QML-Dateien und echten Datenträgerzugriff über einen FileIO-Testadapter. Ein Update wird geschrieben, geprüft, geladen und in Active.json gespeichert. Nach Zerstörung des Pluginobjekts lädt derselbe Engine-Cache die neue Version; ein zusätzlicher Prozess lädt ebenfalls die neue Version. Veraltete Settings-Einträge werden bewusst vorgegeben und ignoriert. Ein manipulierter Datensatz mit Pfad außerhalb des Pluginordners wird abgewiesen. Keine echten Netzaufrufe oder API-Keys.
